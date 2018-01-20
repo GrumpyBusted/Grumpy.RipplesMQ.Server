@@ -1,5 +1,7 @@
 [![Build status](https://ci.appveyor.com/api/projects/status/j8m99qqh103uqfr9?svg=true)](https://ci.appveyor.com/project/GrumpyBusted/grumpy-ripplesmq-server)
 [![codecov](https://codecov.io/gh/GrumpyBusted/Grumpy.RipplesMQ.Server/branch/master/graph/badge.svg)](https://codecov.io/gh/GrumpyBusted/Grumpy.RipplesMQ.Server)
+[![nuget](https://img.shields.io/nuget/v/Grumpy.RipplesMQ.Server.svg)](https://www.nuget.org/packages/Grumpy.RipplesMQ.Server/)
+[![downloads](https://img.shields.io/nuget/dt/Grumpy.RipplesMQ.Server.svg)](https://www.nuget.org/packages/Grumpy.RipplesMQ.Server/)
 
 # Grumpy.RipplesMQ.Server
 RipplesMQ is a simple Message Broker, this library contain the server part, use
