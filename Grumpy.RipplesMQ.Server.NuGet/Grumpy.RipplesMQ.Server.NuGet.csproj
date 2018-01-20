@@ -4,11 +4,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{F1491E91-37E6-4C31-AD94-BD41E5FBEFF3}</ProjectGuid>
+    <ProjectGuid>{AF8C4A00-93FB-46E5-A68F-A58B3D96E56C}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Grumpy.Common.ToBe.UnitTests</RootNamespace>
-    <AssemblyName>Grumpy.Common.ToBe.UnitTests</AssemblyName>
+    <RootNamespace>Grumpy.RipplesMQ.Server.NuGet</RootNamespace>
+    <AssemblyName>Grumpy.RipplesMQ.Server.NuGet</AssemblyName>
     <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -32,22 +32,24 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CancelableServiceBaseTests.cs" />
-    <Compile Include="Helper\MyCancelableService.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Grumpy.Common.ToBe\Grumpy.Common.ToBe.csproj">
-      <Project>{2879F579-1719-410D-A0CB-65D1B7BA5765}</Project>
-      <Name>Grumpy.Common.ToBe</Name>
+    <None Include="Grumpy.RipplesMQ.Server.nuspec">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Grumpy.RipplesMQ.Core\Grumpy.RipplesMQ.Core.csproj">
+      <Project>{62447414-7e5c-4861-a68e-963c2a1ee956}</Project>
+      <Name>Grumpy.RipplesMQ.Core</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Grumpy.TestTools">
-      <Version>1.2.0</Version>
+    <PackageReference Include="Grumpy.ServiceBase">
+      <Version>1.0.0</Version>
     </PackageReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

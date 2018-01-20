@@ -1,10 +1,9 @@
-﻿using Grumpy.Common.ToBe;
-using System.Threading;
+﻿using System.Threading;
 using Grumpy.RipplesMQ.Core.Interfaces;
 
 namespace Grumpy.RipplesMQ.Server
 {
-    public class MessageBrokerService : CancelableServiceBase, ITopshelfService
+    public class MessageBrokerService : ServiceBase.ServiceBase
     {
         private readonly IMessageBrokerFactory _messageBrokerFactory;
         private IMessageBroker _messageBroker;

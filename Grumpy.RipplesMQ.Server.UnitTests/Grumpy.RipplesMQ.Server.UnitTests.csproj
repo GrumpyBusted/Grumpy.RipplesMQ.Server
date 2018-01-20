@@ -39,7 +39,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Grumpy.Common">
-      <Version>1.2.0</Version>
+      <Version>1.2.2</Version>
     </PackageReference>
     <PackageReference Include="Grumpy.RipplesMQ.Shared">
       <Version>1.2.0</Version>
@@ -49,10 +49,6 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Grumpy.Common.ToBe\Grumpy.Common.ToBe.csproj">
-      <Project>{2879F579-1719-410D-A0CB-65D1B7BA5765}</Project>
-      <Name>Grumpy.Common.ToBe</Name>
-    </ProjectReference>
     <ProjectReference Include="..\Grumpy.RipplesMQ.Core\Grumpy.RipplesMQ.Core.csproj">
       <Project>{62447414-7E5C-4861-A68E-963C2A1EE956}</Project>
       <Name>Grumpy.RipplesMQ.Core</Name>

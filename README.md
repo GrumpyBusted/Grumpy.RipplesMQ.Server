@@ -2,8 +2,6 @@
 [![codecov](https://codecov.io/gh/GrumpyBusted/Grumpy.RipplesMQ.Server/branch/master/graph/badge.svg)](https://codecov.io/gh/GrumpyBusted/Grumpy.RipplesMQ.Server)
 
 # Grumpy.RipplesMQ.Server
-RipplesMQ Message Broker Server.
-
 RipplesMQ is a simple Message Broker, this library contain the server part, use
 [Grumpy.RipplesMQ.Client](https://github.com/GrumpyBusted/Grumpy.RipplesMQ.Client) to build services 
 using RipplesMQ Server.
