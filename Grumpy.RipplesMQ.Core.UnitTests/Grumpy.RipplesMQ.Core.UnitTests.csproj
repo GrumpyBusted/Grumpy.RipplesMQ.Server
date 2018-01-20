@@ -30,10 +30,18 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Grumpy.MessageQueue">
+      <HintPath>..\..\..\..\..\Users\u3334\.nuget\packages\grumpy.messagequeue\1.2.0\lib\net451\Grumpy.MessageQueue.dll</HintPath>
+    </Reference>
+    <Reference Include="Grumpy.RipplesMQ.Shared">
+      <HintPath>..\..\..\..\..\Users\u3334\.nuget\packages\grumpy.ripplesmq.shared\1.2.0\lib\net451\Grumpy.RipplesMQ.Shared.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="MessageBrokerFactoryTests.cs" />
+    <Compile Include="MessageBrokerTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -43,6 +51,12 @@
     <PackageReference Include="Grumpy.TestTools">
       <Version>1.2.0</Version>
     </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Grumpy.RipplesMQ.Core\Grumpy.RipplesMQ.Core.csproj">
+      <Project>{62447414-7E5C-4861-A68E-963C2A1EE956}</Project>
+      <Name>Grumpy.RipplesMQ.Core</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

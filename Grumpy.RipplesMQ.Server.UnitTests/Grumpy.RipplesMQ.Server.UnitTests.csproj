@@ -34,6 +34,7 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="MessageBrokerServiceTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -43,6 +44,20 @@
     <PackageReference Include="Grumpy.TestTools">
       <Version>1.2.0</Version>
     </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Grumpy.Common.ToBe\Grumpy.Common.ToBe.csproj">
+      <Project>{2879F579-1719-410D-A0CB-65D1B7BA5765}</Project>
+      <Name>Grumpy.Common.ToBe</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Grumpy.RipplesMQ.Core\Grumpy.RipplesMQ.Core.csproj">
+      <Project>{62447414-7E5C-4861-A68E-963C2A1EE956}</Project>
+      <Name>Grumpy.RipplesMQ.Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Grumpy.RipplesMQ.Server\Grumpy.RipplesMQ.Server.csproj">
+      <Project>{AF8A568A-8BDB-47A9-8D57-2BE24C4243A8}</Project>
+      <Name>Grumpy.RipplesMQ.Server</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

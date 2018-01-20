@@ -1,15 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Grumpy.Common.ToBe;
+using Topshelf;
 
 namespace Grumpy.RipplesMQ.Server
 {
-    class Program
+    public static class Program
     {
-        static void Main(string[] args)
+        private static void Main()
         {
+            HostFactory.Run(TopshelfUtility.BuildService(MessageBrokerServiceBuilder.Build));
         }
     }
 }
