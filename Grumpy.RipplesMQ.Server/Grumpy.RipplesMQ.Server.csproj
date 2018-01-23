@@ -46,13 +46,13 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Grumpy.Common">
-      <Version>1.2.2</Version>
+      <Version>1.2.3</Version>
     </PackageReference>
     <PackageReference Include="Grumpy.MessageQueue">
-      <Version>1.2.0</Version>
+      <Version>1.2.1</Version>
     </PackageReference>
     <PackageReference Include="Grumpy.ServiceBase">
-      <Version>1.0.0</Version>
+      <Version>1.0.4</Version>
     </PackageReference>
   </ItemGroup>
   <ItemGroup>

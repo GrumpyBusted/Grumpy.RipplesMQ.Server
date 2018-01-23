@@ -1,31 +1,71 @@
-﻿using System;
+﻿using System.Collections.Generic;
 using System.Linq;
-using Grumpy.Json;
-using Grumpy.RipplesMQ.Core.Entities;
 using Grumpy.RipplesMQ.Core.Infrastructure;
+using Grumpy.RipplesMQ.Entity;
 
 namespace Grumpy.RipplesMQ.Infrastructure.Repositories
 {
     internal class SubscriberRepository : ISubscriberRepository
     {
-        public void Insert(Subscriber subscriber)
+        private readonly Entities _entities;
+
+        public SubscriberRepository(Entities entities)
         {
-            Console.WriteLine($"Insert in SubscriberRepository {subscriber.SerializeToJson(false)}");
+            _entities = entities;
         }
 
-        public void Update(Subscriber subscriber)
+        public void Insert(Core.Entities.Subscriber subscriber)
         {
-            Console.WriteLine($"Update in SubscriberRepository {subscriber.SerializeToJson(false)}");
+            _entities.Subscriber.Add(new Subscriber
+            {
+                ServerName = subscriber.ServerName,
+                ServiceName = subscriber.ServiceName,
+                InstanceName = subscriber.InstanceName,
+                Name = subscriber.Name,
+                Topic = subscriber.Topic,
+                QueueName = subscriber.QueueName,
+                LastRegisterDateTime = subscriber.LastRegisterDateTime
+            });
         }
 
-        public Subscriber Get(string serverName, string queueName)
+        public void Update(Core.Entities.Subscriber subscriber)
         {
-            return GetAll().SingleOrDefault(e => e.ServerName == serverName && e.QueueName == queueName);
+            var entity = GetEntity(subscriber.ServerName, subscriber.QueueName);
+
+            entity.ServiceName = subscriber.ServiceName;
+            entity.InstanceName = subscriber.InstanceName;
+            entity.Name = subscriber.Name;
+            entity.Topic = subscriber.Topic;
+            entity.LastRegisterDateTime = subscriber.LastRegisterDateTime;
         }
 
-        public IQueryable<Subscriber> GetAll()
+        public Core.Entities.Subscriber Get(string serverName, string queueName)
         {
-            return Enumerable.Empty<Subscriber>().AsQueryable();
+            return FromEntity(GetEntity(serverName, queueName));  
+        }
+
+        private Subscriber GetEntity(string serverName, string queueName)
+        {
+            return _entities.Subscriber.SingleOrDefault(e => e.ServerName == serverName && e.QueueName == queueName);
+        }
+
+        public IEnumerable<Core.Entities.Subscriber> GetAll()
+        {
+            return _entities.Subscriber.ToList().Select(FromEntity);
+        }
+
+        private static Core.Entities.Subscriber FromEntity(Subscriber subscriber)
+        {
+            return subscriber == null ? null : new Core.Entities.Subscriber
+            {
+                ServerName = subscriber.ServerName,
+                ServiceName = subscriber.ServiceName,
+                InstanceName = subscriber.InstanceName,
+                Name = subscriber.Name,
+                Topic = subscriber.Topic,
+                QueueName = subscriber.QueueName,
+                LastRegisterDateTime = subscriber.LastRegisterDateTime
+            };
         }
     }
 }

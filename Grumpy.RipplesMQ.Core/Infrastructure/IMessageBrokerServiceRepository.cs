@@ -1,4 +1,4 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
 
 namespace Grumpy.RipplesMQ.Core.Infrastructure
 {
@@ -7,6 +7,6 @@ namespace Grumpy.RipplesMQ.Core.Infrastructure
         void Insert(Entities.MessageBrokerService messageBroker);
         void Update(Entities.MessageBrokerService messageBroker);
         Entities.MessageBrokerService Get(string serverName, string serviceName, string instanceName);
-        IQueryable<Entities.MessageBrokerService> GetAll();
+        IEnumerable<Entities.MessageBrokerService> GetAll();
     }
 }

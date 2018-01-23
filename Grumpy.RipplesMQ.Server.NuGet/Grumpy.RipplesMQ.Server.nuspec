@@ -5,9 +5,7 @@
         <version>0</version>
         <title>Grumpy.RipplesMQ.Server</title>
         <description>RipplesMQ Message Broker Server</description>
-        <summary>
-            RipplesMQ is a simple Message Broker, this library contain the server part, use Grumpy.RipplesMQ.Client to build services using RipplesMQ Server.
-        </summary>
+        <summary>RipplesMQ is a simple Message Broker, this library contain the server part, use Grumpy.RipplesMQ.Client to build services using RipplesMQ Server.</summary>
         <tags>ripplesmq ripplesmq-client configuration</tags>
         <authors>Anders Busted-Janum</authors>
         <owners>GrumpyBusted</owners>
@@ -16,9 +14,22 @@
         <requireLicenseAcceptance>false</requireLicenseAcceptance>
         <language>en-US</language>
         <copyright>Copyright © Busted-Janum 2018</copyright>
+        <dependencies>
+            <dependency id="Grumpy.Common" version="1.2.3" />
+            <dependency id="Grumpy.Json" version="1.2.3" />
+            <dependency id="Grumpy.Entity" version="1.2.4" />
+            <dependency id="Grumpy.MessageQueue" version="1.2.1" />
+            <dependency id="Grumpy.RipplesMQ.Shared" version="1.2.4" />
+            <dependency id="EntityFramework" version="6.2.0" />
+        </dependencies>
     </metadata>
     <files>
         <file src="Grumpy.RipplesMQ.Core.dll" target="lib\net451" />
         <file src="Grumpy.RipplesMQ.Core.pdb" target="lib\net451" />
+        <file src="Grumpy.RipplesMQ.Infrastructure.dll" target="lib\net451" />
+        <file src="Grumpy.RipplesMQ.Infrastructure.pdb" target="lib\net451" />
+        <file src="Grumpy.RipplesMQ.Entity.dll" target="lib\net451" />
+        <file src="Grumpy.RipplesMQ.Entity.pdb" target="lib\net451" />
+        <file src="Grumpy.RipplesMQ.Database.dacpac" target="contents" />
     </files>
 </package>

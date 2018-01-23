@@ -1,0 +1,10 @@
+﻿
+
+
+
+
+
+
+Checking for MS SQL Project and updating PostBuildEvent
+Project file found C:\Dev\Source\Repos\Grumpy.RipplesMQ.Server\Grumpy.RipplesMQ.Database\Grumpy.RipplesMQ.Database.sqlproj
+Project updated!

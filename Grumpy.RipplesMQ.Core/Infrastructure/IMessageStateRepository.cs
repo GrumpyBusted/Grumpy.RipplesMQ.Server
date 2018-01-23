@@ -1,4 +1,4 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
 using Grumpy.RipplesMQ.Core.Entities;
 
 namespace Grumpy.RipplesMQ.Core.Infrastructure
@@ -7,7 +7,7 @@ namespace Grumpy.RipplesMQ.Core.Infrastructure
     {
         void Insert(MessageState messageState);
         MessageState Get(string messageId, string subscriberName);
-        IQueryable<MessageState> GetAll();
+        IEnumerable<MessageState> GetAll();
         void DeleteBySubscriber(string subscriberName);
         void DeleteByMessageId(string messageId);
     }

@@ -1,4 +1,4 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
 using Grumpy.RipplesMQ.Core.Entities;
 
 namespace Grumpy.RipplesMQ.Core.Infrastructure
@@ -8,6 +8,6 @@ namespace Grumpy.RipplesMQ.Core.Infrastructure
         void Insert(Subscriber subscriber);
         void Update(Subscriber subscriber);
         Subscriber Get(string serverName, string queueName);
-        IQueryable<Subscriber> GetAll();
+        IEnumerable<Subscriber> GetAll();
     }
 }

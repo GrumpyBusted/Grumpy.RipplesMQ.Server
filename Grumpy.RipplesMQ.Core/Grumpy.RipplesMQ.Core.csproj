@@ -30,6 +30,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Grumpy.Entity">
+      <HintPath>..\..\..\..\..\Users\u3334\.nuget\packages\grumpy.entity\0.9.5\lib\net451\Grumpy.Entity.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
   </ItemGroup>
@@ -64,13 +67,13 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Grumpy.Common">
-      <Version>1.2.2</Version>
+      <Version>1.2.3</Version>
     </PackageReference>
     <PackageReference Include="Grumpy.MessageQueue">
-      <Version>1.2.0</Version>
+      <Version>1.2.1</Version>
     </PackageReference>
     <PackageReference Include="Grumpy.RipplesMQ.Shared">
-      <Version>1.2.0</Version>
+      <Version>1.2.4</Version>
     </PackageReference>
   </ItemGroup>
   <ItemGroup />

@@ -1,31 +1,56 @@
-﻿using System;
+﻿using System.Collections.Generic;
 using System.Linq;
-using Grumpy.Json;
-using Grumpy.RipplesMQ.Core.Entities;
 using Grumpy.RipplesMQ.Core.Infrastructure;
+using Grumpy.RipplesMQ.Entity;
 
 namespace Grumpy.RipplesMQ.Infrastructure.Repositories
 {
     internal class MessageRepository : IMessageRepository
     {
-        public void Insert(Message message)
+        private readonly Entities _entities;
+
+        public MessageRepository(Entities entities)
         {
-            Console.WriteLine($"Insert in MessageRepository {message.SerializeToJson(false)}");
+            _entities = entities;
+        }
+
+        public void Insert(Core.Entities.Message message)
+        {
+            _entities.Message.Add(new Message
+            {
+                Id = message.Id,
+                Topic = message.Topic,
+                Type = message.Type,
+                Body = message.Body,
+                PublishDateTime = message.PublishDateTime
+            });
         }
 
         public void Delete(string id)
         {
-            Console.WriteLine($"Delete from MessageRepository {id}");
+            _entities.Message.RemoveRange(_entities.Message.Where(m => m.Id == id));
         }
 
-        public Message Get(string id)
+        public Core.Entities.Message Get(string id)
         {
-            return GetAll().SingleOrDefault(e => e.Id == id);
+            return FromEntity(_entities.Message.SingleOrDefault(m => m.Id == id));
         }
 
-        public IQueryable<Message> GetAll()
+        public IEnumerable<Core.Entities.Message> GetAll()
         {
-            return Enumerable.Empty<Message>().AsQueryable();
+            return _entities.Message.ToList().Select(FromEntity);
+        }
+
+        private static Core.Entities.Message FromEntity(Message message)
+        {
+            return message == null ? null : new Core.Entities.Message
+            {
+                Id = message.Id,
+                Topic = message.Topic,
+                Type = message.Type,
+                Body = message.Body,
+                PublishDateTime = message.PublishDateTime
+            };
         }
     }
 }

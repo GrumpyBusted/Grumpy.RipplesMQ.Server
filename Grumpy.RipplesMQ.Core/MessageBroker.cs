@@ -605,8 +605,8 @@ namespace Grumpy.RipplesMQ.Core
                     ServerName = _messageBrokerServiceInformation.ServerName,
                     ServiceName = _messageBrokerServiceInformation.ServiceName,
                     InstanceName = _messageBrokerServiceInformation.InstanceName,
-                    LocaleQueueName = _messageBrokerServiceInformation.LocaleQueueName,
-                    RemoteQueueName = _messageBrokerServiceInformation.RemoteQueueName,
+                    LocaleQueueName = _messageBrokerServiceInformation.LocaleQueueName.ToLowerInvariant(),
+                    RemoteQueueName = _messageBrokerServiceInformation.RemoteQueueName.ToLowerInvariant(),
                     LastStartDateTime = DateTimeOffset.Now
                 };
 
@@ -614,7 +614,10 @@ namespace Grumpy.RipplesMQ.Core
             }
             else
             {
+                messageBrokerService.LocaleQueueName = _messageBrokerServiceInformation.LocaleQueueName.ToLowerInvariant();
+                messageBrokerService.RemoteQueueName = _messageBrokerServiceInformation.RemoteQueueName.ToLowerInvariant();
                 messageBrokerService.LastStartDateTime = DateTimeOffset.Now;
+
                 messageBrokerServiceRepository.Update(messageBrokerService);
             }
 
@@ -765,7 +768,7 @@ namespace Grumpy.RipplesMQ.Core
                 var messageStateRepository = repositories.MessageStateRepository();
                 var subscriberRepository = repositories.SubscriberRepository();
 
-                var subscriberNames = messageStateRepository.GetAll().Select(m => m.SubscriberName).Distinct().Except(subscriberRepository.GetAll().Select(s => s.Name).Distinct());
+                var subscriberNames = messageStateRepository.GetAll().Select(m => m.SubscriberName).Distinct().Except(subscriberRepository.GetAll().Select(s => s.Name).Distinct()).ToList();
 
                 if (subscriberNames.Any())
                 {
@@ -791,7 +794,7 @@ namespace Grumpy.RipplesMQ.Core
                 var messageStateRepository = repositories.MessageStateRepository();
                 var messageRepository = repositories.MessageRepository();
 
-                var messageIds = messageRepository.GetAll().Where(m => m.PublishDateTime < DateTimeOffset.Now.AddDays(-1)).Select(m => m.Id).Distinct().Except(messageStateRepository.GetAll().Where(s => s.State != "Completed").Select(s => s.MessageId).Distinct());
+                var messageIds = messageRepository.GetAll().Where(m => m.PublishDateTime < DateTimeOffset.Now.AddDays(-1)).Select(m => m.Id).Distinct().Except(messageStateRepository.GetAll().Where(s => s.State != "Completed").Select(s => s.MessageId).Distinct()).ToList();
 
                 if (messageIds.Any())
                 {
@@ -817,7 +820,7 @@ namespace Grumpy.RipplesMQ.Core
                 var messageStateRepository = repositories.MessageStateRepository();
                 var messageRepository = repositories.MessageRepository();
 
-                var messageIds = messageStateRepository.GetAll().Select(s => s.MessageId).Distinct().Except(messageRepository.GetAll().Select(m => m.Id).Distinct());
+                var messageIds = messageStateRepository.GetAll().Select(s => s.MessageId).Distinct().Except(messageRepository.GetAll().Select(m => m.Id).Distinct()).ToList();
 
                 if (messageIds.Any())
                 {
@@ -842,7 +845,7 @@ namespace Grumpy.RipplesMQ.Core
             {
                 var subscriberRepository = repositories.SubscriberRepository();
 
-                var subscriber = subscriberRepository.Get(message.ServerName, message.QueueName);
+                var subscriber = subscriberRepository.Get(message.ServerName, message.QueueName.ToLowerInvariant());
 
                 if (subscriber == null)
                 {
@@ -853,7 +856,7 @@ namespace Grumpy.RipplesMQ.Core
                         InstanceName = message.InstanceName,
                         Name = message.Name,
                         Topic = message.Topic,
-                        QueueName = message.QueueName,
+                        QueueName = message.QueueName.ToLowerInvariant(),
                         LastRegisterDateTime = DateTimeOffset.Now
                     };
 

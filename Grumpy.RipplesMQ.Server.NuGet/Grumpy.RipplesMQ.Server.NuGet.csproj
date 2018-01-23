@@ -46,11 +46,14 @@
       <Project>{62447414-7e5c-4861-a68e-963c2a1ee956}</Project>
       <Name>Grumpy.RipplesMQ.Core</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="Grumpy.ServiceBase">
-      <Version>1.0.0</Version>
-    </PackageReference>
+    <ProjectReference Include="..\Grumpy.RipplesMQ.Entity\Grumpy.RipplesMQ.Entity.csproj">
+      <Project>{44854d20-76e0-4a1a-aa1b-c4f47f018c5b}</Project>
+      <Name>Grumpy.RipplesMQ.Entity</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Grumpy.RipplesMQ.Infrastructure\Grumpy.RipplesMQ.Infrastructure.csproj">
+      <Project>{12018202-003f-431d-9e4a-361266daaed2}</Project>
+      <Name>Grumpy.RipplesMQ.Infrastructure</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -43,17 +43,24 @@
     <Compile Include="Repositories\SubscriberRepository.cs" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="EntityFramework">
+      <Version>6.2.0</Version>
+    </PackageReference>
     <PackageReference Include="Grumpy.Common">
-      <Version>1.2.2</Version>
+      <Version>1.2.3</Version>
     </PackageReference>
     <PackageReference Include="Grumpy.Json">
-      <Version>1.2.1</Version>
+      <Version>1.2.3</Version>
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Grumpy.RipplesMQ.Core\Grumpy.RipplesMQ.Core.csproj">
       <Project>{62447414-7E5C-4861-A68E-963C2A1EE956}</Project>
       <Name>Grumpy.RipplesMQ.Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Grumpy.RipplesMQ.Entity\Grumpy.RipplesMQ.Entity.csproj">
+      <Project>{44854d20-76e0-4a1a-aa1b-c4f47f018c5b}</Project>
+      <Name>Grumpy.RipplesMQ.Entity</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

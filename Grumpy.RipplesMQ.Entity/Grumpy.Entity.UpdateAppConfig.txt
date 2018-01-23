@@ -1,0 +1,5 @@
+﻿
+
+
+Checking for database connection in App.config and updating
+
