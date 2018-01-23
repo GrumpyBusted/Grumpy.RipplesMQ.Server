@@ -7,3 +7,10 @@
     [ErrorCount] INT NOT NULL, 
     [UpdateDateTime] DATETIMEOFFSET NOT NULL
 )
+GO
+
+CREATE UNIQUE INDEX [IX_MessageState_MessageId] ON [dbo].[MessageState] ([MessageId], [SubscriberName], [Id] DESC)
+
+GO
+
+CREATE INDEX [IX_MessageState_SubscriberName] ON [dbo].[MessageState] ([SubscriberName])

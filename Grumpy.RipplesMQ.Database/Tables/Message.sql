@@ -8,4 +8,4 @@
 )
 GO
 
-CREATE UNIQUE INDEX [IX_Message_Id] ON [dbo].[Message] ([Id])
+CREATE INDEX [IX_Message_Topic] ON [dbo].[Message] ([Topic])

@@ -30,6 +30,5 @@
         <file src="Grumpy.RipplesMQ.Infrastructure.pdb" target="lib\net451" />
         <file src="Grumpy.RipplesMQ.Entity.dll" target="lib\net451" />
         <file src="Grumpy.RipplesMQ.Entity.pdb" target="lib\net451" />
-        <file src="Grumpy.RipplesMQ.Database.dacpac" target="contents" />
     </files>
 </package>
