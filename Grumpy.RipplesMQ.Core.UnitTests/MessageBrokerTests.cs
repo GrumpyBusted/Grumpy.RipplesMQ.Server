@@ -11,7 +11,6 @@ using Grumpy.RipplesMQ.Core.Entities;
 using Grumpy.RipplesMQ.Core.Infrastructure;
 using Grumpy.RipplesMQ.Core.Interfaces;
 using Grumpy.RipplesMQ.Core.Messages;
-using Grumpy.RipplesMQ.Shared.Config;
 using Grumpy.RipplesMQ.Shared.Messages;
 using NSubstitute;
 using Xunit;
@@ -21,7 +20,7 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
 {
     public class MessageBrokerTests
     {
-        private readonly MessageBrokerServiceConfig _messageBrokerServiceConfig;
+        private readonly MessageBrokerConfig _messageBrokerConfig;
         private readonly IRepositoriesFactory _repositoriesFactory;
         private readonly IQueueHandlerFactory _queueHandlerFactory;
         private readonly IQueueFactory _queueFactory;
@@ -36,7 +35,7 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
 
         public MessageBrokerTests()
         {
-            _messageBrokerServiceConfig = new MessageBrokerServiceConfig
+            _messageBrokerConfig = new MessageBrokerConfig
             {
                 ServiceName = "UnitTest",
                 InstanceName = "1",
@@ -60,7 +59,7 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
             _repositoriesFactory.Create().Returns(_repositories);
             _queueFactory = Substitute.For<IQueueFactory>();
             _messageBrokerQueue = Substitute.For<ILocaleQueue>();
-            _queueFactory.CreateLocale(MessageBrokerConfig.LocaleQueueName, Arg.Any<bool>(), Arg.Any<LocaleQueueMode>(), Arg.Any<bool>()).Returns(_messageBrokerQueue);
+            _queueFactory.CreateLocale(Shared.Config.MessageBrokerConfig.LocaleQueueName, Arg.Any<bool>(), Arg.Any<LocaleQueueMode>(), Arg.Any<bool>()).Returns(_messageBrokerQueue);
         }
 
         [Fact]
@@ -973,7 +972,7 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
 
         private IMessageBroker CreateMessageBroker()
         {
-            return new MessageBroker(_messageBrokerServiceConfig, _repositoriesFactory, _queueHandlerFactory, _queueFactory, _processInformation);
+            return new MessageBroker(_messageBrokerConfig, _repositoriesFactory, _queueHandlerFactory, _queueFactory, _processInformation);
         }
     }
 }

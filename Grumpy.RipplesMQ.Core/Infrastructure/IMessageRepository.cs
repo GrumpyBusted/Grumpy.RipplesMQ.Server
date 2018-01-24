@@ -7,7 +7,6 @@ namespace Grumpy.RipplesMQ.Core.Infrastructure
     {
         void Insert(Message message);
         void Delete(string id);
-        Message Get(string id);
         IEnumerable<Message> GetAll();
     }
 }

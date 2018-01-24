@@ -16,7 +16,6 @@ using Grumpy.RipplesMQ.Core.Enum;
 using Grumpy.RipplesMQ.Core.Infrastructure;
 using Grumpy.RipplesMQ.Core.Interfaces;
 using Grumpy.RipplesMQ.Core.Messages;
-using Grumpy.RipplesMQ.Shared.Config;
 using Grumpy.RipplesMQ.Shared.Exceptions;
 using Grumpy.RipplesMQ.Shared.Messages;
 using Newtonsoft.Json;
@@ -39,7 +38,7 @@ namespace Grumpy.RipplesMQ.Core
         public List<Dto.SubscribeHandler> SubscribeHandlers { get; }
         public List<Dto.RequestHandler> RequestHandlers { get; }
 
-        public MessageBroker(MessageBrokerServiceConfig messageBrokerServiceConfig, IRepositoriesFactory repositoriesFactory, IQueueHandlerFactory queueHandlerFactory, IQueueFactory queueFactory, IProcessInformation processInformation)
+        public MessageBroker(MessageBrokerConfig messageBrokerConfig, IRepositoriesFactory repositoriesFactory, IQueueHandlerFactory queueHandlerFactory, IQueueFactory queueFactory, IProcessInformation processInformation)
         {
             _repositoriesFactory = repositoriesFactory;
             _queueFactory = queueFactory;
@@ -50,11 +49,13 @@ namespace Grumpy.RipplesMQ.Core
             {
                 Id = UniqueKeyUtility.Generate(),
                 ServerName = processInformation.MachineName,
-                ServiceName = messageBrokerServiceConfig.ServiceName,
-                InstanceName = messageBrokerServiceConfig.InstanceName,
-                LocaleQueueName = MessageBrokerConfig.LocaleQueueName,
-                RemoteQueueName = messageBrokerServiceConfig.RemoteQueueName
+                ServiceName = messageBrokerConfig.ServiceName,
+                InstanceName = messageBrokerConfig.InstanceName,
+                LocaleQueueName = Shared.Config.MessageBrokerConfig.LocaleQueueName,
+                RemoteQueueName =  messageBrokerConfig.RemoteQueueName
             };
+
+            Console.WriteLine(_messageBrokerServiceInformation.SerializeToJson());
 
             MessageBrokerServices = new List<Dto.MessageBrokerService>();
             SubscribeHandlers = new List<Dto.SubscribeHandler>();
@@ -270,7 +271,7 @@ namespace Grumpy.RipplesMQ.Core
             if (message.Persistent)
                 SavePersistentMessage(message, subscribeNames);
 
-            using (var queue = _queueFactory.CreateLocale(MessageBrokerConfig.LocaleQueueName, true, LocaleQueueMode.Durable, true))
+            using (var queue = _queueFactory.CreateLocale(Shared.Config.MessageBrokerConfig.LocaleQueueName, true, LocaleQueueMode.Durable, true))
             {
                 if (message.Persistent)
                 {
@@ -605,8 +606,8 @@ namespace Grumpy.RipplesMQ.Core
                     ServerName = _messageBrokerServiceInformation.ServerName,
                     ServiceName = _messageBrokerServiceInformation.ServiceName,
                     InstanceName = _messageBrokerServiceInformation.InstanceName,
-                    LocaleQueueName = _messageBrokerServiceInformation.LocaleQueueName.ToLowerInvariant(),
-                    RemoteQueueName = _messageBrokerServiceInformation.RemoteQueueName.ToLowerInvariant(),
+                    LocaleQueueName = _messageBrokerServiceInformation.LocaleQueueName,
+                    RemoteQueueName = _messageBrokerServiceInformation.RemoteQueueName,
                     LastStartDateTime = DateTimeOffset.Now
                 };
 
@@ -614,8 +615,8 @@ namespace Grumpy.RipplesMQ.Core
             }
             else
             {
-                messageBrokerService.LocaleQueueName = _messageBrokerServiceInformation.LocaleQueueName.ToLowerInvariant();
-                messageBrokerService.RemoteQueueName = _messageBrokerServiceInformation.RemoteQueueName.ToLowerInvariant();
+                messageBrokerService.LocaleQueueName = _messageBrokerServiceInformation.LocaleQueueName;
+                messageBrokerService.RemoteQueueName = _messageBrokerServiceInformation.RemoteQueueName;
                 messageBrokerService.LastStartDateTime = DateTimeOffset.Now;
 
                 messageBrokerServiceRepository.Update(messageBrokerService);
@@ -845,7 +846,7 @@ namespace Grumpy.RipplesMQ.Core
             {
                 var subscriberRepository = repositories.SubscriberRepository();
 
-                var subscriber = subscriberRepository.Get(message.ServerName, message.QueueName.ToLowerInvariant());
+                var subscriber = subscriberRepository.Get(message.ServerName, message.QueueName);
 
                 if (subscriber == null)
                 {
@@ -856,7 +857,7 @@ namespace Grumpy.RipplesMQ.Core
                         InstanceName = message.InstanceName,
                         Name = message.Name,
                         Topic = message.Topic,
-                        QueueName = message.QueueName.ToLowerInvariant(),
+                        QueueName = message.QueueName,
                         LastRegisterDateTime = DateTimeOffset.Now
                     };
 

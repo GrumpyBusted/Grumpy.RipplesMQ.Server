@@ -39,7 +39,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Grumpy.Common">
-      <Version>1.2.3</Version>
+      <Version>1.2.5</Version>
     </PackageReference>
     <PackageReference Include="Grumpy.RipplesMQ.Shared">
       <Version>1.2.4</Version>
@@ -54,7 +54,7 @@
       <Name>Grumpy.RipplesMQ.Core</Name>
     </ProjectReference>
     <ProjectReference Include="..\Grumpy.RipplesMQ.Server\Grumpy.RipplesMQ.Server.csproj">
-      <Project>{AF8A568A-8BDB-47A9-8D57-2BE24C4243A8}</Project>
+      <Project>{5262e610-5776-4311-a7af-a7a3016ebccd}</Project>
       <Name>Grumpy.RipplesMQ.Server</Name>
     </ProjectReference>
   </ItemGroup>

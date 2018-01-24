@@ -7,15 +7,15 @@ namespace Grumpy.RipplesMQ.Core
 {
     public class MessageBrokerFactory : IMessageBrokerFactory
     {
-        private readonly MessageBrokerServiceConfig _messageBrokerServiceConfig;
+        private readonly MessageBrokerConfig _messageBrokerConfig;
         private readonly IRepositoriesFactory _repositoriesFactory;
         private readonly IQueueHandlerFactory _queueHandlerFactory;
         private readonly IQueueFactory _queueFactory;
         private readonly IProcessInformation _processInformation;
 
-        public MessageBrokerFactory(MessageBrokerServiceConfig messageBrokerServiceConfig, IRepositoriesFactory repositoriesFactory, IQueueHandlerFactory queueHandlerFactory, IQueueFactory queueFactory, IProcessInformation processInformation)
+        public MessageBrokerFactory(MessageBrokerConfig messageBrokerConfig, IRepositoriesFactory repositoriesFactory, IQueueHandlerFactory queueHandlerFactory, IQueueFactory queueFactory, IProcessInformation processInformation)
         {
-            _messageBrokerServiceConfig = messageBrokerServiceConfig;
+            _messageBrokerConfig = messageBrokerConfig;
             _repositoriesFactory = repositoriesFactory;
             _queueHandlerFactory = queueHandlerFactory;
             _queueFactory = queueFactory;
@@ -24,7 +24,7 @@ namespace Grumpy.RipplesMQ.Core
 
         public IMessageBroker Create()
         {
-            return new MessageBroker(_messageBrokerServiceConfig, _repositoriesFactory, _queueHandlerFactory, _queueFactory, _processInformation);
+            return new MessageBroker(_messageBrokerConfig, _repositoriesFactory, _queueHandlerFactory, _queueFactory, _processInformation);
         }
     }
 }

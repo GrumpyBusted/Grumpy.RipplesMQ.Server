@@ -4,16 +4,15 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{AF8A568A-8BDB-47A9-8D57-2BE24C4243A8}</ProjectGuid>
-    <OutputType>Exe</OutputType>
+    <ProjectGuid>{5262E610-5776-4311-A7AF-A7A3016EBCCD}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Grumpy.RipplesMQ.Server</RootNamespace>
     <AssemblyName>Grumpy.RipplesMQ.Server</AssemblyName>
     <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -23,7 +22,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
@@ -34,36 +32,42 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Data" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="MessageBrokerService.cs" />
-    <Compile Include="MessageBrokerServiceBuilder.cs" />
-    <Compile Include="Program.cs" />
+    <Compile Include="MessageBrokerBuilder.cs" />
+    <Compile Include="MessageBrokerServiceConfig.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="App.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="Grumpy.Common">
-      <Version>1.2.3</Version>
-    </PackageReference>
-    <PackageReference Include="Grumpy.MessageQueue">
-      <Version>1.2.1</Version>
-    </PackageReference>
-    <PackageReference Include="Grumpy.ServiceBase">
-      <Version>1.0.4</Version>
-    </PackageReference>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Grumpy.RipplesMQ.Core\Grumpy.RipplesMQ.Core.csproj">
       <Project>{62447414-7E5C-4861-A68E-963C2A1EE956}</Project>
       <Name>Grumpy.RipplesMQ.Core</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Grumpy.RipplesMQ.Entity\Grumpy.RipplesMQ.Entity.csproj">
+      <Project>{44854d20-76e0-4a1a-aa1b-c4f47f018c5b}</Project>
+      <Name>Grumpy.RipplesMQ.Entity</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Grumpy.RipplesMQ.Infrastructure\Grumpy.RipplesMQ.Infrastructure.csproj">
-      <Project>{12018202-003F-431D-9E4A-361266DAAED2}</Project>
+      <Project>{12018202-003f-431d-9e4a-361266daaed2}</Project>
       <Name>Grumpy.RipplesMQ.Infrastructure</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Grumpy.Common">
+      <Version>1.2.5</Version>
+    </PackageReference>
+    <PackageReference Include="Grumpy.Entity">
+      <Version>0.9.5</Version>
+    </PackageReference>
+    <PackageReference Include="Grumpy.MessageQueue">
+      <Version>1.2.1</Version>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Grumpy.RipplesMQ.Server.nuspec">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

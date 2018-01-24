@@ -1,6 +1,7 @@
 ﻿using System.Threading;
+using FluentAssertions;
+using Grumpy.RipplesMQ.Core;
 using Grumpy.RipplesMQ.Core.Interfaces;
-using NSubstitute;
 using Xunit;
 
 namespace Grumpy.RipplesMQ.Server.UnitTests
@@ -10,18 +11,25 @@ namespace Grumpy.RipplesMQ.Server.UnitTests
         [Fact]
         public void MessageBrokerServiceCanStartAndStop()
         {
-            var messageBroker = Substitute.For<IMessageBroker>();
-            var messageBrokerFactory = Substitute.For<IMessageBrokerFactory>();
-            messageBrokerFactory.Create().Returns(messageBroker);
+            var config = new MessageBrokerServiceConfig
+            {
+                ServiceName = "MyRipplesMQService",
+                InstanceName = "1"
+            };
 
-            var cut = new MessageBrokerService(messageBrokerFactory);
+            var cut = MessageBrokerBuilder.Build(config);;
             
-            cut.Start();
+            cut.Start(CancellationToken.None);
             Thread.Sleep(1000);
-            cut.Stop();
-            
-            messageBrokerFactory.Received(1).Create();
-            messageBroker.Received(1).Dispose();
+//            cut.Stop();
+        }
+
+        [Fact]
+        public void CanBuildMessageBroker()
+        {
+            var cut = MessageBrokerBuilder.Build(null);
+
+            cut.GetType().Should().Be(typeof(MessageBroker));
         }
     }
 }

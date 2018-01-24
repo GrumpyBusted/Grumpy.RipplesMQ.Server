@@ -31,11 +31,6 @@ namespace Grumpy.RipplesMQ.Infrastructure.Repositories
             _entities.Message.RemoveRange(_entities.Message.Where(m => m.Id == id));
         }
 
-        public Core.Entities.Message Get(string id)
-        {
-            return FromEntity(_entities.Message.SingleOrDefault(m => m.Id == id));
-        }
-
         public IEnumerable<Core.Entities.Message> GetAll()
         {
             return _entities.Message.ToList().Select(FromEntity);
