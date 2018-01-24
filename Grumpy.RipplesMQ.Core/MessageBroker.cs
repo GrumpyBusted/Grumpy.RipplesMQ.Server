@@ -283,8 +283,7 @@ namespace Grumpy.RipplesMQ.Core
                         {
                             queue.Send(CreatePublishSubscriberMessage(subscribeName, message));
 
-                            if (message.Persistent)
-                                SaveMessageState(messageStateRepository, message.MessageId, subscribeName, SubscribeHandlerState.Distributed, message.ErrorCount);
+                            SaveMessageState(messageStateRepository, message.MessageId, subscribeName, SubscribeHandlerState.Distributed, message.ErrorCount);
                         }
 
                         repositories.Save();

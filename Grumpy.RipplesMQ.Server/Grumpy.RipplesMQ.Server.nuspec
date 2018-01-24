@@ -9,8 +9,8 @@
         <tags>ripplesmq ripplesmq-client configuration</tags>
         <authors>Anders Busted-Janum</authors>
         <owners>GrumpyBusted</owners>
-        <projectUrl>https://github.com/GrumpyBusted/Grumpy.RipplesMQ.Config</projectUrl>
-        <licenseUrl>https://github.com/GrumpyBusted/Grumpy.RipplesMQ.Config/blob/master/LICENSE</licenseUrl>
+        <projectUrl>https://github.com/GrumpyBusted/Grumpy.RipplesMQ.Server</projectUrl>
+        <licenseUrl>https://github.com/GrumpyBusted/Grumpy.RipplesMQ.Server/blob/master/LICENSE</licenseUrl>
         <requireLicenseAcceptance>false</requireLicenseAcceptance>
         <language>en-US</language>
         <copyright>Copyright © Busted-Janum 2018</copyright>
