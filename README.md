@@ -51,17 +51,11 @@ deploying the database. Alternativly get the source of my implementation of the 
 [Grumpy.RipplesMQ.Sample](https://github.com/GrumpyBusted/Grumpy.RipplesMQ.Sample).
 
 ```csharp
-// Configuration for RipplesMQ Server, ServiceName will be defaulted to the process name. As
-// mentioned you can even run without database settings.
-var messageBrokerServiceConfig = new MessageBrokerServiceConfig
-{
-    ServiceName = "RipplesMQ.Server",
-    DatabaseServer = "(localdb)\MSSQLLocalDB",
-    DatabaseName = "RipplesMQ",
-};
- 
-// Constructing the RipplesMQ Message Broker
-using (var messageBroker = MessageBrokerBuilder.Build(messageBrokerServiceConfig))
+var builder = new MessageBrokerBuilder()
+                      .WithServiceName("RipplesMQ.Server")
+                      .WithRepository(@"(localdb)\MSSQLLocalDB", "RipplesMQ");
+
+using (var messageBroker = builder.Build())
 {
     // Start the Message Broker
     messageBroker.Start(cancellationToken);
@@ -72,3 +66,4 @@ using (var messageBroker = MessageBrokerBuilder.Build(messageBrokerServiceConfig
     messageBroker.Stop();
 }
 ```
+_Default ServiceName is the name of the current process._
