@@ -4,7 +4,7 @@
   <edmx:Runtime>
     <!-- SSDL content -->
     <edmx:StorageModels>
-      <Schema Namespace="Grumpy.RipplesMQ.Entity.Model.Store" Provider="System.Data.SqlClient" ProviderManifestToken="2012" Alias="Self" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl">
+    <Schema Namespace="Grumpy.RipplesMQ.Entity.Model.Store" Provider="System.Data.SqlClient" ProviderManifestToken="2012" Alias="Self" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl">
         <EntityType Name="Message">
           <Key>
             <PropertyRef Name="Id" />
@@ -18,13 +18,14 @@
         <EntityType Name="MessageBrokerService">
           <Key>
             <PropertyRef Name="ServerName" />
+            <PropertyRef Name="ServiceName" />
           </Key>
           <Property Name="ServerName" Type="nvarchar" MaxLength="15" Nullable="false" />
           <Property Name="ServiceName" Type="nvarchar" MaxLength="256" Nullable="false" />
-          <Property Name="InstanceName" Type="nvarchar" MaxLength="8" Nullable="false" />
           <Property Name="RemoteQueueName" Type="nvarchar" MaxLength="124" Nullable="false" />
           <Property Name="LocaleQueueName" Type="nvarchar" MaxLength="124" Nullable="false" />
-          <Property Name="LastStartDateTime" Type="datetimeoffset" Precision="7" Nullable="false" />
+          <Property Name="StartDateTime" Type="datetimeoffset" Precision="7" Nullable="false" />
+          <Property Name="PulseDateTime" Type="datetimeoffset" Precision="7" Nullable="false" />
         </EntityType>
         <EntityType Name="MessageState">
           <Key>
@@ -39,15 +40,16 @@
         </EntityType>
         <EntityType Name="Subscriber">
           <Key>
-            <PropertyRef Name="Name" />
+            <PropertyRef Name="ServerName" />
+            <PropertyRef Name="QueueName" />
           </Key>
           <Property Name="Name" Type="nvarchar" MaxLength="256" Nullable="false" />
           <Property Name="Topic" Type="nvarchar" MaxLength="256" Nullable="false" />
           <Property Name="ServerName" Type="nvarchar" MaxLength="15" Nullable="false" />
           <Property Name="ServiceName" Type="nvarchar" MaxLength="256" Nullable="false" />
-          <Property Name="InstanceName" Type="nvarchar" MaxLength="8" Nullable="false" />
           <Property Name="QueueName" Type="nvarchar" MaxLength="124" Nullable="false" />
-          <Property Name="LastRegisterDateTime" Type="datetimeoffset" Precision="7" Nullable="false" />
+          <Property Name="RegisterDateTime" Type="datetimeoffset" Precision="7" Nullable="false" />
+          <Property Name="PulseDateTime" Type="datetimeoffset" Precision="7" Nullable="false" />
         </EntityType>
         <EntityContainer Name="GrumpyRipplesMQEntityModelStoreContainer">
           <EntitySet Name="Message" EntityType="Self.Message" Schema="dbo" store:Type="Tables" />
@@ -55,62 +57,63 @@
           <EntitySet Name="MessageState" EntityType="Self.MessageState" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Subscriber" EntityType="Self.Subscriber" Schema="dbo" store:Type="Tables" />
         </EntityContainer>
-      </Schema>
-    </edmx:StorageModels>
+      </Schema></edmx:StorageModels>
     <!-- CSDL content -->
     <edmx:ConceptualModels>
       <Schema Namespace="Grumpy.RipplesMQ.Entity.Model" Alias="Self" annotation:UseStrongSpatialTypes="false" xmlns:annotation="http://schemas.microsoft.com/ado/2009/02/edm/annotation" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm">
+        <EntityContainer Name="Entities" annotation:LazyLoadingEnabled="true">
+          <EntitySet Name="Message" EntityType="Grumpy.RipplesMQ.Entity.Model.Message" />
+          <EntitySet Name="MessageBrokerService" EntityType="Grumpy.RipplesMQ.Entity.Model.MessageBrokerService" />
+          <EntitySet Name="MessageState" EntityType="Grumpy.RipplesMQ.Entity.Model.MessageState" />
+          <EntitySet Name="Subscriber" EntityType="Grumpy.RipplesMQ.Entity.Model.Subscriber" />
+        </EntityContainer>
         <EntityType Name="Message">
           <Key>
             <PropertyRef Name="Id" />
           </Key>
-          <Property Name="Id" Type="String" MaxLength="64" FixedLength="false" Unicode="true" Nullable="false" />
-          <Property Name="Topic" Type="String" MaxLength="256" FixedLength="false" Unicode="true" Nullable="false" />
-          <Property Name="Type" Type="String" MaxLength="2014" FixedLength="false" Unicode="true" Nullable="false" />
-          <Property Name="Body" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" Nullable="false" />
+          <Property Name="Id" Type="String" Nullable="false" MaxLength="64" FixedLength="false" Unicode="true" />
+          <Property Name="Topic" Type="String" Nullable="false" MaxLength="256" FixedLength="false" Unicode="true" />
+          <Property Name="Type" Type="String" Nullable="false" MaxLength="2014" FixedLength="false" Unicode="true" />
+          <Property Name="Body" Type="String" Nullable="false" MaxLength="Max" FixedLength="false" Unicode="true" />
           <Property Name="PublishDateTime" Type="DateTimeOffset" Nullable="false" Precision="7" />
         </EntityType>
         <EntityType Name="MessageBrokerService">
           <Key>
             <PropertyRef Name="ServerName" />
+            <PropertyRef Name="ServiceName" />
           </Key>
-          <Property Name="ServerName" Type="String" MaxLength="15" FixedLength="false" Unicode="true" Nullable="false" />
-          <Property Name="ServiceName" Type="String" MaxLength="256" FixedLength="false" Unicode="true" Nullable="false" />
-          <Property Name="InstanceName" Type="String" MaxLength="8" FixedLength="false" Unicode="true" Nullable="false" />
-          <Property Name="RemoteQueueName" Type="String" MaxLength="124" FixedLength="false" Unicode="true" Nullable="false" />
-          <Property Name="LocaleQueueName" Type="String" MaxLength="124" FixedLength="false" Unicode="true" Nullable="false" />
-          <Property Name="LastStartDateTime" Type="DateTimeOffset" Nullable="false" Precision="7" />
+          <Property Name="ServerName" Type="String" Nullable="false" MaxLength="15" FixedLength="false" Unicode="true" />
+          <Property Name="ServiceName" Type="String" Nullable="false" MaxLength="256" FixedLength="false" Unicode="true" />
+          <Property Name="RemoteQueueName" Type="String" Nullable="false" MaxLength="124" FixedLength="false" Unicode="true" />
+          <Property Name="LocaleQueueName" Type="String" Nullable="false" MaxLength="124" FixedLength="false" Unicode="true" />
+          <Property Name="StartDateTime" Type="DateTimeOffset" Nullable="false" Precision="7" />
+          <Property Name="PulseDateTime" Type="DateTimeOffset" Nullable="false" Precision="7" />
         </EntityType>
         <EntityType Name="MessageState">
           <Key>
             <PropertyRef Name="Id" />
           </Key>
           <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
-          <Property Name="MessageId" Type="String" MaxLength="64" FixedLength="false" Unicode="true" Nullable="false" />
-          <Property Name="SubscriberName" Type="String" MaxLength="256" FixedLength="false" Unicode="true" Nullable="false" />
-          <Property Name="State" Type="String" MaxLength="32" FixedLength="false" Unicode="true" Nullable="false" />
+          <Property Name="MessageId" Type="String" Nullable="false" MaxLength="64" FixedLength="false" Unicode="true" />
+          <Property Name="SubscriberName" Type="String" Nullable="false" MaxLength="256" FixedLength="false" Unicode="true" />
+          <Property Name="State" Type="String" Nullable="false" MaxLength="32" FixedLength="false" Unicode="true" />
           <Property Name="ErrorCount" Type="Int32" Nullable="false" />
           <Property Name="UpdateDateTime" Type="DateTimeOffset" Nullable="false" Precision="7" />
         </EntityType>
         <EntityType Name="Subscriber">
           <Key>
-            <PropertyRef Name="Name" />
+            <PropertyRef Name="ServerName" />
+            <PropertyRef Name="QueueName" />
           </Key>
-          <Property Name="Name" Type="String" MaxLength="256" FixedLength="false" Unicode="true" Nullable="false" />
-          <Property Name="Topic" Type="String" MaxLength="256" FixedLength="false" Unicode="true" Nullable="false" />
-          <Property Name="ServerName" Type="String" MaxLength="15" FixedLength="false" Unicode="true" Nullable="false" />
-          <Property Name="ServiceName" Type="String" MaxLength="256" FixedLength="false" Unicode="true" Nullable="false" />
-          <Property Name="InstanceName" Type="String" MaxLength="8" FixedLength="false" Unicode="true" Nullable="false" />
-          <Property Name="QueueName" Type="String" MaxLength="124" FixedLength="false" Unicode="true" Nullable="false" />
-          <Property Name="LastRegisterDateTime" Type="DateTimeOffset" Nullable="false" Precision="7" />
+          <Property Name="Name" Type="String" Nullable="false" MaxLength="256" FixedLength="false" Unicode="true" />
+          <Property Name="Topic" Type="String" Nullable="false" MaxLength="256" FixedLength="false" Unicode="true" />
+          <Property Name="ServerName" Type="String" Nullable="false" MaxLength="15" FixedLength="false" Unicode="true" />
+          <Property Name="ServiceName" Type="String" Nullable="false" MaxLength="256" FixedLength="false" Unicode="true" />
+          <Property Name="QueueName" Type="String" Nullable="false" MaxLength="124" FixedLength="false" Unicode="true" />
+          <Property Name="RegisterDateTime" Type="DateTimeOffset" Nullable="false" Precision="7" />
+          <Property Name="PulseDateTime" Type="DateTimeOffset" Nullable="false" Precision="7" />
         </EntityType>
-        <EntityContainer Name="Entities" annotation:LazyLoadingEnabled="true">
-          <EntitySet Name="Message" EntityType="Self.Message" />
-          <EntitySet Name="MessageBrokerService" EntityType="Self.MessageBrokerService" />
-          <EntitySet Name="MessageState" EntityType="Self.MessageState" />
-          <EntitySet Name="Subscriber" EntityType="Self.Subscriber" />
-        </EntityContainer>
-      </Schema>
+        </Schema>
     </edmx:ConceptualModels>
     <!-- C-S mapping content -->
     <edmx:Mappings>
@@ -119,48 +122,48 @@
           <EntitySetMapping Name="Message">
             <EntityTypeMapping TypeName="Grumpy.RipplesMQ.Entity.Model.Message">
               <MappingFragment StoreEntitySet="Message">
-                <ScalarProperty Name="Id" ColumnName="Id" />
-                <ScalarProperty Name="Topic" ColumnName="Topic" />
-                <ScalarProperty Name="Type" ColumnName="Type" />
-                <ScalarProperty Name="Body" ColumnName="Body" />
                 <ScalarProperty Name="PublishDateTime" ColumnName="PublishDateTime" />
+                <ScalarProperty Name="Body" ColumnName="Body" />
+                <ScalarProperty Name="Type" ColumnName="Type" />
+                <ScalarProperty Name="Topic" ColumnName="Topic" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>
           <EntitySetMapping Name="MessageBrokerService">
             <EntityTypeMapping TypeName="Grumpy.RipplesMQ.Entity.Model.MessageBrokerService">
               <MappingFragment StoreEntitySet="MessageBrokerService">
-                <ScalarProperty Name="ServerName" ColumnName="ServerName" />
-                <ScalarProperty Name="ServiceName" ColumnName="ServiceName" />
-                <ScalarProperty Name="InstanceName" ColumnName="InstanceName" />
-                <ScalarProperty Name="RemoteQueueName" ColumnName="RemoteQueueName" />
+                <ScalarProperty Name="PulseDateTime" ColumnName="PulseDateTime" />
+                <ScalarProperty Name="StartDateTime" ColumnName="StartDateTime" />
                 <ScalarProperty Name="LocaleQueueName" ColumnName="LocaleQueueName" />
-                <ScalarProperty Name="LastStartDateTime" ColumnName="LastStartDateTime" />
+                <ScalarProperty Name="RemoteQueueName" ColumnName="RemoteQueueName" />
+                <ScalarProperty Name="ServiceName" ColumnName="ServiceName" />
+                <ScalarProperty Name="ServerName" ColumnName="ServerName" />
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>
           <EntitySetMapping Name="MessageState">
             <EntityTypeMapping TypeName="Grumpy.RipplesMQ.Entity.Model.MessageState">
               <MappingFragment StoreEntitySet="MessageState">
-                <ScalarProperty Name="Id" ColumnName="Id" />
-                <ScalarProperty Name="MessageId" ColumnName="MessageId" />
-                <ScalarProperty Name="SubscriberName" ColumnName="SubscriberName" />
-                <ScalarProperty Name="State" ColumnName="State" />
-                <ScalarProperty Name="ErrorCount" ColumnName="ErrorCount" />
                 <ScalarProperty Name="UpdateDateTime" ColumnName="UpdateDateTime" />
+                <ScalarProperty Name="ErrorCount" ColumnName="ErrorCount" />
+                <ScalarProperty Name="State" ColumnName="State" />
+                <ScalarProperty Name="SubscriberName" ColumnName="SubscriberName" />
+                <ScalarProperty Name="MessageId" ColumnName="MessageId" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>
           <EntitySetMapping Name="Subscriber">
             <EntityTypeMapping TypeName="Grumpy.RipplesMQ.Entity.Model.Subscriber">
               <MappingFragment StoreEntitySet="Subscriber">
-                <ScalarProperty Name="Name" ColumnName="Name" />
-                <ScalarProperty Name="Topic" ColumnName="Topic" />
-                <ScalarProperty Name="ServerName" ColumnName="ServerName" />
-                <ScalarProperty Name="ServiceName" ColumnName="ServiceName" />
-                <ScalarProperty Name="InstanceName" ColumnName="InstanceName" />
+                <ScalarProperty Name="PulseDateTime" ColumnName="PulseDateTime" />
+                <ScalarProperty Name="RegisterDateTime" ColumnName="RegisterDateTime" />
                 <ScalarProperty Name="QueueName" ColumnName="QueueName" />
-                <ScalarProperty Name="LastRegisterDateTime" ColumnName="LastRegisterDateTime" />
+                <ScalarProperty Name="ServiceName" ColumnName="ServiceName" />
+                <ScalarProperty Name="ServerName" ColumnName="ServerName" />
+                <ScalarProperty Name="Topic" ColumnName="Topic" />
+                <ScalarProperty Name="Name" ColumnName="Name" />
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>

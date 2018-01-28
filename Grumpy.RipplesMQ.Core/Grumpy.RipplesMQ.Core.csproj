@@ -20,6 +20,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <DocumentationFile>bin\Debug\Grumpy.RipplesMQ.Core.xml</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -28,23 +29,18 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <DocumentationFile>bin\Release\Grumpy.RipplesMQ.Core.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Grumpy.Entity">
-      <HintPath>..\..\..\..\..\Users\u3334\.nuget\packages\grumpy.entity\0.9.5\lib\net451\Grumpy.Entity.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Messages\CleanOldServicesMessage.cs" />
     <Compile Include="Dto\MessageBrokerService.cs" />
     <Compile Include="Dto\MessageBrokerServiceInformation.cs" />
     <Compile Include="Dto\RequestHandler.cs" />
     <Compile Include="Dto\SubscribeHandler.cs" />
-    <Compile Include="Entities\Message.cs" />
-    <Compile Include="Entities\MessageBrokerService.cs" />
-    <Compile Include="Entities\MessageState.cs" />
-    <Compile Include="Entities\Subscriber.cs" />
     <Compile Include="Enum\SubscribeHandlerState.cs" />
     <Compile Include="Infrastructure\IMessageBrokerServiceRepository.cs" />
     <Compile Include="Infrastructure\IMessageRepository.cs" />
@@ -53,9 +49,7 @@
     <Compile Include="Infrastructure\IRepositoriesFactory.cs" />
     <Compile Include="Infrastructure\ISubscriberRepository.cs" />
     <Compile Include="Interfaces\IMessageBroker.cs" />
-    <Compile Include="Interfaces\IMessageBrokerFactory.cs" />
     <Compile Include="MessageBroker.cs" />
-    <Compile Include="MessageBrokerFactory.cs" />
     <Compile Include="MessageBrokerConfig.cs" />
     <Compile Include="Messages\LocaleRequestHandler.cs" />
     <Compile Include="Messages\LocaleSubscribeHandler.cs" />
@@ -67,15 +61,20 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Grumpy.Common">
-      <Version>1.2.5</Version>
+      <Version>1.2.7</Version>
     </PackageReference>
     <PackageReference Include="Grumpy.MessageQueue">
-      <Version>1.2.1</Version>
+      <Version>1.2.2</Version>
     </PackageReference>
     <PackageReference Include="Grumpy.RipplesMQ.Shared">
-      <Version>1.2.4</Version>
+      <Version>1.2.5</Version>
     </PackageReference>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <ProjectReference Include="..\Grumpy.RipplesMQ.Entity\Grumpy.RipplesMQ.Entity.csproj">
+      <Project>{44854D20-76E0-4A1A-AA1B-C4F47F018C5B}</Project>
+      <Name>Grumpy.RipplesMQ.Entity</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -7,14 +7,14 @@ using Grumpy.Common;
 using Grumpy.Common.Interfaces;
 using Grumpy.MessageQueue.Enum;
 using Grumpy.MessageQueue.Interfaces;
-using Grumpy.RipplesMQ.Core.Entities;
+using Grumpy.MessageQueue.Msmq.Exceptions;
 using Grumpy.RipplesMQ.Core.Infrastructure;
 using Grumpy.RipplesMQ.Core.Interfaces;
 using Grumpy.RipplesMQ.Core.Messages;
+using Grumpy.RipplesMQ.Entity;
 using Grumpy.RipplesMQ.Shared.Messages;
 using NSubstitute;
 using Xunit;
-using MessageBrokerService = Grumpy.RipplesMQ.Core.Entities.MessageBrokerService;
 
 namespace Grumpy.RipplesMQ.Core.UnitTests
 {
@@ -38,7 +38,6 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
             _messageBrokerConfig = new MessageBrokerConfig
             {
                 ServiceName = "UnitTest",
-                InstanceName = "1",
                 RemoteQueueName = "MyRemoteQueueName"
             };
 
@@ -74,7 +73,7 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
         [Fact]
         public void CreateMessageBrokerShouldSaveMessageBrokerService()
         {
-            _messageBrokerServiceRepository.Get(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>()).Returns((MessageBrokerService)null);
+            _messageBrokerServiceRepository.Get(Arg.Any<string>(), Arg.Any<string>()).Returns((MessageBrokerService)null);
 
             using (var cut = CreateMessageBroker())
             {
@@ -82,14 +81,13 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
             }
 
             _messageBrokerServiceRepository.Received(1).Insert(Arg.Any<MessageBrokerService>());
-            _messageBrokerServiceRepository.Received(0).Update(Arg.Any<MessageBrokerService>());
             _repositories.Received(1).Save();
         }
 
         [Fact]
         public void CreateMessageBrokerShouldUpdateMessageBrokerService()
         {
-            _messageBrokerServiceRepository.Get(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>()).Returns(new MessageBrokerService());
+            _messageBrokerServiceRepository.Get(Arg.Any<string>(), Arg.Any<string>()).Returns(new MessageBrokerService());
 
             using (var cut = CreateMessageBroker())
             {
@@ -97,7 +95,6 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
             }
 
             _messageBrokerServiceRepository.Received(0).Insert(Arg.Any<MessageBrokerService>());
-            _messageBrokerServiceRepository.Received(1).Update(Arg.Any<MessageBrokerService>());
             _repositories.Received(1).Save();
         }
 
@@ -154,7 +151,7 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
                 Thread.Sleep(1000);
             }
 
-            _queueFactory.Received(3).CreateRemote(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<bool>(), Arg.Any<RemoteQueueMode>(), Arg.Any<bool>());
+            _queueFactory.Received(5).CreateRemote(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<bool>(), Arg.Any<RemoteQueueMode>(), Arg.Any<bool>());
         }
 
         [Fact]
@@ -225,6 +222,53 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
         }
 
         [Fact]
+        public void MessageBrokerHandshakeWhenRemoteQueueNotExistsShouldDeleteMessageBrokerService()
+        {
+            _queueFactory.CreateRemote(Arg.Any<string>(), "NonExistingRemoteQueue", Arg.Any<bool>(), Arg.Any<RemoteQueueMode>(), Arg.Any<bool>()).Returns(e => throw new QueueMissingException("NonExistingRemoteQueue"));
+
+            using (var cut = CreateMessageBroker())
+            {
+                cut.MessageBrokerServices.Add(new Dto.MessageBrokerService { RemoteQueueName = "NonExistingRemoteQueue" });
+
+                HandleMessage(cut, new SendMessageBrokerHandshakeMessage());
+
+                cut.MessageBrokerServices.Single(m => m.RemoteQueueName == "NonExistingRemoteQueue").ErrorCount.Should().Be(1);
+            }
+        }
+
+        [Fact]
+        public void MessageBrokerHandshakeShouldUpdatePulse()
+        {
+            var messageBrokerService = new MessageBrokerService { ServerName = "MyTestServer", RemoteQueueName = "MyRemoteQueue" };
+            _messageBrokerServiceRepository.Get(Arg.Any<string>(), Arg.Any<string>()).Returns(messageBrokerService);
+
+            using (var cut = CreateMessageBroker())
+            {
+                cut.MessageBrokerServices.Add(new Dto.MessageBrokerService { RemoteQueueName = "MyRemoteQueue" });
+
+                HandleMessage(cut, new SendMessageBrokerHandshakeMessage());
+
+                messageBrokerService.PulseDateTime.Should().BeAfter(DateTimeOffset.Now.AddHours(-1));
+            }
+
+            _repositories.Received(1).Save();
+        }
+
+        [Fact]
+        public void MessageBrokerHandshakeShouldRemoveMessageService()
+        {
+            using (var cut = CreateMessageBroker())
+            {
+                cut.MessageBrokerServices.Add(new Dto.MessageBrokerService { RemoteQueueName = "MyRemoteQueueA", ErrorCount = 4 });
+                cut.MessageBrokerServices.Add(new Dto.MessageBrokerService { RemoteQueueName = "MyRemoteQueueB", ErrorCount = 2 });
+
+                HandleMessage(cut, new SendMessageBrokerHandshakeMessage());
+
+                cut.MessageBrokerServices.Count.Should().Be(1);
+            }
+        }
+
+        [Fact]
         public void ShouldNotCleanupAfterStartWhenMissingIdFromOtherServer()
         {
             _messageBrokerServiceRepository.GetAll().Returns(new List<MessageBrokerService>
@@ -235,7 +279,7 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
 
             _messageRepository.GetAll().Returns(new List<Message>
             {
-                new Message { Id = "MessageId1", PublishDateTime = DateTimeOffset.Now.AddDays(-2) }
+                new Message { Id = "MessageId1", PublishDateTime = DateTimeOffset.Now.AddDays(-10) }
             }.AsQueryable());
 
             using (var cut = CreateMessageBroker())
@@ -256,7 +300,7 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
 
             _messageRepository.GetAll().Returns(new List<Message>
             {
-                new Message { Id = "MessageId1", PublishDateTime = DateTimeOffset.Now.AddDays(-2) }
+                new Message { Id = "MessageId1", PublishDateTime = DateTimeOffset.Now.AddDays(-10) }
             }.AsQueryable());
 
             using (var cut = CreateMessageBroker())
@@ -266,6 +310,26 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
             }
 
             _messageRepository.Received(1).Delete("MessageId1");
+        }
+
+        [Fact]
+        public void ShouldSendCleanupServiceMessage()
+        {
+            var remoteQueue = Substitute.For<IRemoteQueue>();
+            _queueFactory.CreateRemote("MyTestServer", "MyRemoteQueueName", Arg.Any<bool>(), Arg.Any<RemoteQueueMode>(), Arg.Any<bool>()).Returns(remoteQueue);
+
+            _messageBrokerServiceRepository.GetAll().Returns(new List<MessageBrokerService>
+            {
+                new MessageBrokerService { ServerName = "MyTestServer", RemoteQueueName = "MyRemoteQueueName" }
+            }.AsQueryable());
+
+            using (var cut = CreateMessageBroker())
+            {
+                cut.Start(_cancellationToken);
+                Thread.Sleep(1000);
+            }
+
+            remoteQueue.Received(1).Send(Arg.Any<CleanOldServicesMessage>());
         }
 
         [Fact]
@@ -316,8 +380,8 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
         {
             _messageRepository.GetAll().Returns(new List<Message>
             {
-                new Message { Id = "MessageId1", PublishDateTime = DateTimeOffset.Now.AddDays(-2) },
-                new Message { Id = "MessageId2", PublishDateTime = DateTimeOffset.Now.AddDays(-2) }
+                new Message { Id = "MessageId1", PublishDateTime = DateTimeOffset.Now.AddDays(-10) },
+                new Message { Id = "MessageId2", PublishDateTime = DateTimeOffset.Now.AddDays(-10) }
             }.AsQueryable());
 
             _messageStateRepository.GetAll().Returns(new List<MessageState>
@@ -339,7 +403,7 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
         {
             _messageRepository.GetAll().Returns(new List<Message>
             {
-                new Message { Id = "MessageId1", PublishDateTime = DateTimeOffset.Now.AddDays(-2) }
+                new Message { Id = "MessageId1", PublishDateTime = DateTimeOffset.Now.AddDays(-10) }
             }.AsQueryable());
 
             _messageStateRepository.GetAll().Returns(new List<MessageState>
@@ -359,7 +423,7 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
         {
             _messageRepository.GetAll().Returns(new List<Message>
             {
-                new Message { Id = "MessageId1", PublishDateTime = DateTimeOffset.Now.AddDays(-2) }
+                new Message { Id = "MessageId1", PublishDateTime = DateTimeOffset.Now.AddDays(-10) }
             }.AsQueryable());
 
             _messageStateRepository.GetAll().Returns(new List<MessageState>
@@ -379,7 +443,7 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
             var messages = new List<Message>();
 
             for (var i = 1; i < 101; ++i)
-                messages.Add(new Message { Id = UniqueKeyUtility.Generate(), PublishDateTime = DateTimeOffset.Now.AddDays(-2) });
+                messages.Add(new Message { Id = UniqueKeyUtility.Generate(), PublishDateTime = DateTimeOffset.Now.AddDays(-10) });
 
             _messageRepository.GetAll().Returns(messages.AsQueryable());
 
@@ -391,11 +455,77 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
         }
 
         [Fact]
+        public void CleanOldServicesMessageShouldDeleteOldMessageBrokerService()
+        {
+            _messageBrokerServiceRepository.GetAll().Returns(new List<MessageBrokerService>
+            {
+                new MessageBrokerService { ServerName = "MyTestServer", ServiceName = "SomeService", RemoteQueueName = "OldRemoteQueueName", PulseDateTime = DateTimeOffset.Now.AddDays(-10) },
+                new MessageBrokerService { ServerName = "MyTestServer", ServiceName = "RunningService", RemoteQueueName = "NewRemoteQueueName", PulseDateTime = DateTimeOffset.Now.AddDays(-2) }
+            });
+
+            HandleMessage(new CleanOldServicesMessage());
+
+            _messageBrokerServiceRepository.Received(1).Delete("MyTestServer", "SomeService");
+            _messageBrokerServiceRepository.Received(1).Delete(Arg.Any<string>(), Arg.Any<string>());
+            _repositories.Received(1).Save();
+        }
+
+        [Fact]
+        public void CleanOldServicesMessageShouldDeleteRemoteQueue()
+        {
+            var queue = Substitute.For<ILocaleQueue>();
+            _queueFactory.CreateLocale("OldRemoteQueueName", Arg.Any<bool>(), Arg.Any<LocaleQueueMode>(), Arg.Any<bool>()).Returns(queue);
+
+            _messageBrokerServiceRepository.GetAll().Returns(new List<MessageBrokerService>
+            {
+                new MessageBrokerService { ServerName = "MyTestServer", ServiceName = "SomeService", RemoteQueueName = "OldRemoteQueueName", PulseDateTime = DateTimeOffset.Now.AddDays(-10) },
+                new MessageBrokerService { ServerName = "MyTestServer", ServiceName = "RunningService", RemoteQueueName = "NewRemoteQueueName", PulseDateTime = DateTimeOffset.Now.AddDays(-2) }
+            });
+
+            HandleMessage(new CleanOldServicesMessage());
+
+            queue.Received(1).Delete();
+        }
+
+        [Fact]
+        public void CleanOldServicesMessageShouldDeleteOldSubscriber()
+        {
+            _subscriberRepository.GetAll().Returns(new List<Subscriber>
+            {
+                new Subscriber { ServerName = "MyTestServer", QueueName = "OldQueueName", PulseDateTime = DateTimeOffset.Now.AddDays(-10) },
+                new Subscriber { ServerName = "MyTestServer", QueueName = "NewQueueName", PulseDateTime = DateTimeOffset.Now.AddDays(-2) }
+            });
+
+            HandleMessage(new CleanOldServicesMessage());
+
+            _subscriberRepository.Received(1).Delete("MyTestServer", "OldQueueName");
+            _subscriberRepository.Received(1).Delete(Arg.Any<string>(), Arg.Any<string>());
+            _repositories.Received(1).Save();
+        }
+
+        [Fact]
+        public void CleanOldServicesMessageShouldDeleteSubscriberQueue()
+        {
+            var queue = Substitute.For<ILocaleQueue>();
+            _queueFactory.CreateLocale("OldQueueName", Arg.Any<bool>(), Arg.Any<LocaleQueueMode>(), Arg.Any<bool>()).Returns(queue);
+
+            _subscriberRepository.GetAll().Returns(new List<Subscriber>
+            {
+                new Subscriber { ServerName = "MyTestServer", QueueName = "OldQueueName", PulseDateTime = DateTimeOffset.Now.AddDays(-10) },
+                new Subscriber { ServerName = "MyTestServer", QueueName = "NewQueueName", PulseDateTime = DateTimeOffset.Now.AddDays(-2) }
+            });
+
+            HandleMessage(new CleanOldServicesMessage());
+
+            queue.Received(1).Delete();
+        }
+
+        [Fact]
         public void RemoveMessageStateForDeadMessagesShouldDeleteMessageState()
         {
             _messageRepository.GetAll().Returns(new List<Message>
             {
-                new Message { Id = "MessageId2", PublishDateTime = DateTimeOffset.Now.AddDays(-2) }
+                new Message { Id = "MessageId2", PublishDateTime = DateTimeOffset.Now.AddDays(-10) }
             }.AsQueryable());
 
             _messageStateRepository.GetAll().Returns(new List<MessageState>
@@ -450,7 +580,6 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
             HandleMessage(new SubscribeHandlerRegisterMessage { QueueName = "MySubscribeQueue", Topic = "MyTopic", Durable = true });
 
             _subscriberRepository.Received(1).Insert(Arg.Any<Subscriber>());
-            _subscriberRepository.Received(0).Update(Arg.Any<Subscriber>());
             _repositories.Received(1).Save();
         }
 
@@ -462,7 +591,6 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
             HandleMessage(new SubscribeHandlerRegisterMessage { QueueName = "MySubscribeQueue", Topic = "MyTopic", Durable = true });
 
             _subscriberRepository.Received(0).Insert(Arg.Any<Subscriber>());
-            _subscriberRepository.Received(1).Update(Arg.Any<Subscriber>());
             _repositories.Received(1).Save();
         }
 
@@ -475,7 +603,6 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
             HandleMessage(new SubscribeHandlerRegisterMessage { QueueName = "MySubscribeQueue", Topic = "MyTopic", Durable = false });
 
             _subscriberRepository.Received(0).Insert(Arg.Any<Subscriber>());
-            _subscriberRepository.Received(0).Update(Arg.Any<Subscriber>());
             _repositories.Received(0).Save();
         }
 
@@ -532,6 +659,27 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
                 cut.RequestHandlers.ElementAt(0).QueueName.Should().Be("MyRequestQueue");
                 cut.RequestHandlers.ElementAt(0).LastHandshakeDateTime.Should().NotBeNull();
             }
+        }
+
+        [Fact]
+        public void HandlingMessageBusServiceHandshakeMessageShouldUpdateSubscriberPulseTimestamp()
+        {
+            var subscriber = new Subscriber { ServerName = "MyTestServer", QueueName = "MyQueueName" };
+            _subscriberRepository.Get(Arg.Any<string>(), Arg.Any<string>()).Returns(subscriber);
+
+            using (var cut = CreateMessageBroker())
+            {
+                HandleMessage(cut, new MessageBusServiceHandshakeMessage
+                {
+                    SubscribeHandlers = new List<SubscribeHandler>
+                    {
+                        new SubscribeHandler { QueueName = "MySubscribeQueue", Durable = true }
+                    }
+                });
+            }
+
+            subscriber.PulseDateTime.Should().BeAfter(DateTimeOffset.Now.AddHours(-1));
+            _repositories.Received(1).Save();
         }
 
         [Fact]

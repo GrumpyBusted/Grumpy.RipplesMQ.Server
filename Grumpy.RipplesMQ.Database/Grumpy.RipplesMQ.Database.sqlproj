@@ -66,10 +66,16 @@
     <Build Include="Tables\MessageBrokerService.sql" />
     <Build Include="Tables\MessageState.sql" />
     <Build Include="Tables\Subscriber.sql" />
-    <Build Include="Views\v_MessageState.sql" />
+    <Build Include="Views\v_Message.sql" />
   </ItemGroup>
   <ItemGroup>
     <RefactorLog Include="Grumpy.RipplesMQ.Database.refactorlog" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <PropertyGroup>
     <PostBuildEvent>powershell -file $(SolutionDir)\PublishDacpac.ps1 -TargetPath $(TargetPath) -ProjectDir $(ProjectDir) -ProjectName $(ProjectName)</PostBuildEvent>

@@ -1,5 +1,6 @@
 ﻿using Grumpy.Common;
 using Grumpy.Common.Extensions;
+using Grumpy.Common.Interfaces;
 using Grumpy.Entity;
 using Grumpy.MessageQueue;
 using Grumpy.MessageQueue.Msmq;
@@ -11,27 +12,90 @@ using Grumpy.RipplesMQ.Infrastructure.Repositories;
 
 namespace Grumpy.RipplesMQ.Server
 {
-    public static class MessageBrokerBuilder
+    /// <summary>
+    /// Builder for Message Broker Server
+    /// </summary>
+    public class MessageBrokerBuilder
     {
-        public static IMessageBroker Build(MessageBrokerServiceConfig messageBrokerServiceConfig)
+        private readonly IProcessInformation _processInformation;
+        private string _serviceName;
+        private string _remoteQueueName;
+        private IRepositoriesFactory _repositoriesFactory;
+
+        /// <inheritdoc />
+        public MessageBrokerBuilder()
+        {
+            _processInformation = new ProcessInformation();
+            _serviceName = _processInformation.ProcessName;
+            _remoteQueueName = _serviceName.Replace("$", ".") + ".Remote";
+            _repositoriesFactory = new NullRepositoriesFactory();
+        }
+
+        /// <summary>
+        /// Set Service Name
+        /// </summary>
+        /// <param name="serviceName"></param>
+        /// <returns></returns>
+        public MessageBrokerBuilder WithServiceName(string serviceName)
+        {
+            _serviceName = serviceName;
+
+            return this;
+        }
+
+        /// <summary>
+        /// Set Remote Queue Name
+        /// </summary>
+        /// <param name="remoteQueueName">Remote Queue Name</param>
+        /// <returns></returns>
+        public MessageBrokerBuilder WithRemoteQueueName(string remoteQueueName)
+        {
+            _remoteQueueName = remoteQueueName;
+
+            return this;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="databaseServer"></param>
+        /// <param name="databaseName"></param>
+        /// <returns></returns>
+        public MessageBrokerBuilder WithRepository(string databaseServer, string databaseName = "RipplesMQ")
+        {
+            if (!databaseServer.NullOrEmpty())
+                _repositoriesFactory = new RepositoriesFactory(new EntityConnectionConfig(new DatabaseConnectionConfig(databaseServer, databaseName)));
+
+            return this;
+        }
+
+        /// <summary>
+        /// Build Message Broker
+        /// </summary>
+        /// <returns></returns>
+        public IMessageBroker Build()
         {
             var messageBrokerConfig = new MessageBrokerConfig
             {
-                ServiceName = messageBrokerServiceConfig?.ServiceName.NullOrEmpty() ?? true ? "RipplesMQ.MessageBroker" : messageBrokerServiceConfig.ServiceName,
-                InstanceName = messageBrokerServiceConfig?.InstanceName.NullOrEmpty() ?? true ? "" : messageBrokerServiceConfig.InstanceName
+                ServiceName = _serviceName,
+                RemoteQueueName = _remoteQueueName
             };
 
-            messageBrokerConfig.RemoteQueueName = messageBrokerConfig.ServiceName + (messageBrokerConfig.InstanceName.NullOrEmpty() ? "" : $".{messageBrokerConfig.InstanceName}") + ".Remote";
-
-            var databaseServer = messageBrokerServiceConfig?.DatabaseServer.NullOrEmpty() ?? true ? null : messageBrokerServiceConfig.DatabaseServer;
-            var databaseName = messageBrokerServiceConfig?.DatabaseName.NullOrEmpty() ?? true ? "RipplesMQ" : messageBrokerServiceConfig.DatabaseName;
-
-            var repositoriesFactory = databaseServer == null ? new NullRepositoriesFactory() : (IRepositoriesFactory)new RepositoriesFactory(new EntityConnectionConfig(new DatabaseConnectionConfig(databaseServer, databaseName)));
             var queueFactory = new QueueFactory();
-            var processInformation = new ProcessInformation();
             var queueHandlerFactory = new QueueHandlerFactory(queueFactory);
 
-            return new MessageBroker(messageBrokerConfig, repositoriesFactory, queueHandlerFactory, queueFactory, processInformation);
+            return new MessageBroker(messageBrokerConfig, _repositoriesFactory, queueHandlerFactory, queueFactory, _processInformation);
         }
+
+        /// <summary>
+        /// Build Message Broker
+        /// </summary>
+        /// <param name="messageBusBuilder"></param>
+        /// <returns>The Message Bus</returns>
+        public static implicit operator MessageBroker(MessageBrokerBuilder messageBusBuilder)
+        {
+            return (MessageBroker)messageBusBuilder.Build();
+        }
+
     }
 }

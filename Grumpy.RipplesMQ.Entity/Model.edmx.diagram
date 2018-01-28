@@ -5,10 +5,10 @@
     <!-- Diagram content (shape and connector positions) -->
     <edmx:Diagrams>
       <Diagram DiagramId="b528eee47f3c48a6a621d609850c1688" Name="Diagram1">
-        <EntityTypeShape EntityType="Grumpy.RipplesMQ.Entity.Model.Message" Width="1.5" PointX="0.75" PointY="0.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="Grumpy.RipplesMQ.Entity.Model.MessageBrokerService" Width="1.5" PointX="2.75" PointY="0.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="Grumpy.RipplesMQ.Entity.Model.MessageState" Width="1.5" PointX="0.75" PointY="3.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="Grumpy.RipplesMQ.Entity.Model.Subscriber" Width="1.5" PointX="2.75" PointY="3.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="Grumpy.RipplesMQ.Entity.Model.Message" Width="1.5" PointX="0.75" PointY="0.75" />
+        <EntityTypeShape EntityType="Grumpy.RipplesMQ.Entity.Model.MessageBrokerService" Width="1.5" PointX="2.75" PointY="0.75" />
+        <EntityTypeShape EntityType="Grumpy.RipplesMQ.Entity.Model.MessageState" Width="1.5" PointX="0.75" PointY="3.75" />
+        <EntityTypeShape EntityType="Grumpy.RipplesMQ.Entity.Model.Subscriber" Width="1.5" PointX="2.75" PointY="3.75" />
       </Diagram>
     </edmx:Diagrams>
   </edmx:Designer>

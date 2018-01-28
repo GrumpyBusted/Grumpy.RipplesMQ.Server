@@ -16,9 +16,9 @@ namespace Grumpy.RipplesMQ.Entity
     {
         public string ServerName { get; set; }
         public string ServiceName { get; set; }
-        public string InstanceName { get; set; }
         public string RemoteQueueName { get; set; }
         public string LocaleQueueName { get; set; }
-        public System.DateTimeOffset LastStartDateTime { get; set; }
+        public System.DateTimeOffset StartDateTime { get; set; }
+        public System.DateTimeOffset PulseDateTime { get; set; }
     }
 }

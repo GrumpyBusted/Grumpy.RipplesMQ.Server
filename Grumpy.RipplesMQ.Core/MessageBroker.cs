@@ -10,18 +10,21 @@ using Grumpy.Common.Threading;
 using Grumpy.Json;
 using Grumpy.MessageQueue.Enum;
 using Grumpy.MessageQueue.Interfaces;
+using Grumpy.MessageQueue.Msmq.Exceptions;
 using Grumpy.RipplesMQ.Core.Dto;
-using Grumpy.RipplesMQ.Core.Entities;
 using Grumpy.RipplesMQ.Core.Enum;
 using Grumpy.RipplesMQ.Core.Infrastructure;
 using Grumpy.RipplesMQ.Core.Interfaces;
 using Grumpy.RipplesMQ.Core.Messages;
+using Grumpy.RipplesMQ.Entity;
 using Grumpy.RipplesMQ.Shared.Exceptions;
 using Grumpy.RipplesMQ.Shared.Messages;
 using Newtonsoft.Json;
+using MessageBrokerService = Grumpy.RipplesMQ.Entity.MessageBrokerService;
 
 namespace Grumpy.RipplesMQ.Core
 {
+    /// <inheritdoc />
     public class MessageBroker : IMessageBroker
     {
         private readonly IRepositoriesFactory _repositoriesFactory;
@@ -29,39 +32,45 @@ namespace Grumpy.RipplesMQ.Core
         private readonly IQueueHandler _localeQueueHandler;
         private readonly IQueueHandler _remoteQueueHandler;
         private readonly MessageBrokerServiceInformation _messageBrokerServiceInformation;
+        private readonly ITimerTask _handshakeTask;
+        private readonly ITimerTask _repositoryCleanupTask;
         private CancellationToken _cancellationToken;
-        private ITimerTask _handshakeTask;
-        private ITimerTask _repositoryCleanupTask;
         private bool _disposed;
 
+        /// <inheritdoc />
         public List<Dto.MessageBrokerService> MessageBrokerServices { get; }
+
+        /// <inheritdoc />
         public List<Dto.SubscribeHandler> SubscribeHandlers { get; }
+
+        /// <inheritdoc />
         public List<Dto.RequestHandler> RequestHandlers { get; }
 
+        /// <inheritdoc />
         public MessageBroker(MessageBrokerConfig messageBrokerConfig, IRepositoriesFactory repositoriesFactory, IQueueHandlerFactory queueHandlerFactory, IQueueFactory queueFactory, IProcessInformation processInformation)
         {
             _repositoriesFactory = repositoriesFactory;
             _queueFactory = queueFactory;
             _localeQueueHandler = queueHandlerFactory.Create();
             _remoteQueueHandler = queueHandlerFactory.Create();
+            _handshakeTask = new TimerTask();
+            _repositoryCleanupTask = new TimerTask();
 
             _messageBrokerServiceInformation = new MessageBrokerServiceInformation
             {
                 Id = UniqueKeyUtility.Generate(),
                 ServerName = processInformation.MachineName,
                 ServiceName = messageBrokerConfig.ServiceName,
-                InstanceName = messageBrokerConfig.InstanceName,
                 LocaleQueueName = Shared.Config.MessageBrokerConfig.LocaleQueueName,
-                RemoteQueueName =  messageBrokerConfig.RemoteQueueName
+                RemoteQueueName = messageBrokerConfig.RemoteQueueName
             };
-
-            Console.WriteLine(_messageBrokerServiceInformation.SerializeToJson());
 
             MessageBrokerServices = new List<Dto.MessageBrokerService>();
             SubscribeHandlers = new List<Dto.SubscribeHandler>();
             RequestHandlers = new List<Dto.RequestHandler>();
         }
 
+        /// <inheritdoc />
         public void Start(CancellationToken cancellationToken)
         {
             _cancellationToken = cancellationToken;
@@ -77,14 +86,20 @@ namespace Grumpy.RipplesMQ.Core
 
             _localeQueueHandler.Start(_messageBrokerServiceInformation.LocaleQueueName, true, LocaleQueueMode.DurableCreate, true, Handler, null, null, 1000, true, false, _cancellationToken);
             _remoteQueueHandler.Start(_messageBrokerServiceInformation.RemoteQueueName, true, LocaleQueueMode.DurableCreate, true, Handler, null, null, 1000, true, false, _cancellationToken);
-
-            _handshakeTask = new TimerTask();
             _handshakeTask.Start(SendMessageBrokerHandshakes, 30000, _cancellationToken);
-
-            _repositoryCleanupTask = new TimerTask();
             _repositoryCleanupTask.Start(SendRepositoryCleanupMessage, 3600000, _cancellationToken);
         }
 
+        /// <inheritdoc />
+        public void Stop()
+        {
+            _localeQueueHandler.Stop();
+            _remoteQueueHandler.Stop();
+            _handshakeTask.Stop();
+            _repositoryCleanupTask.Stop();
+        }
+
+        /// <inheritdoc />
         public void Handler(object message, CancellationToken cancellationToken)
         {
             switch (message)
@@ -131,15 +146,19 @@ namespace Grumpy.RipplesMQ.Core
                 case RepositoryCleanupMessage repositoryCleanupMessage:
                     Handler(repositoryCleanupMessage);
                     break;
+                case CleanOldServicesMessage cleanOldServicesMessage:
+                    Handler(cleanOldServicesMessage);
+                    break;
             }
         }
 
+        /// <inheritdoc />
         public void Dispose()
         {
             Dispose(true);
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2213:DisposableFieldsShouldBeDisposed")]  
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2213:DisposableFieldsShouldBeDisposed")]
         private void Dispose(bool disposing)
         {
             if (!_disposed)
@@ -187,7 +206,14 @@ namespace Grumpy.RipplesMQ.Core
             }
 
             if (_messageBrokerServiceInformation.Id == max)
+            {
                 Handler(new RepositoryCleanupMessage(), _cancellationToken);
+
+                foreach (var serverName in MessageBrokerServices.Select(s => s.ServerName).Distinct())
+                {
+                    SendCleanOldServicesMessage(serverName);
+                }
+            }
         }
 
         private void Handler(MessageBusServiceRegisterMessage message)
@@ -201,7 +227,6 @@ namespace Grumpy.RipplesMQ.Core
             {
                 MessageBrokerServerName = _messageBrokerServiceInformation.ServerName,
                 MessageBrokerServiceName = _messageBrokerServiceInformation.ServiceName,
-                MessageBrokerInstanceName = _messageBrokerServiceInformation.InstanceName,
                 RegisterDateTime = registerDateTime,
                 ReplyDateTime = DateTimeOffset.Now,
                 CompletedDateTime = null
@@ -224,7 +249,6 @@ namespace Grumpy.RipplesMQ.Core
             {
                 MessageBrokerServerName = _messageBrokerServiceInformation.ServerName,
                 MessageBrokerServiceName = _messageBrokerServiceInformation.ServiceName,
-                MessageBrokerInstanceName = _messageBrokerServiceInformation.InstanceName,
                 RegisterDateTime = registerDateTime,
                 ReplyDateTime = DateTimeOffset.Now,
                 CompletedDateTime = null
@@ -244,7 +268,6 @@ namespace Grumpy.RipplesMQ.Core
             {
                 MessageBrokerServerName = _messageBrokerServiceInformation.ServerName,
                 MessageBrokerServiceName = _messageBrokerServiceInformation.ServiceName,
-                MessageBrokerInstanceName = _messageBrokerServiceInformation.InstanceName,
                 RegisterDateTime = registerDateTime,
                 ReplyDateTime = DateTimeOffset.Now,
                 CompletedDateTime = null
@@ -256,6 +279,9 @@ namespace Grumpy.RipplesMQ.Core
             foreach (var subscribeHandler in message.SubscribeHandlers ?? Enumerable.Empty<Shared.Messages.SubscribeHandler>())
             {
                 UpdateSubscribeHandler(message.ServerName, subscribeHandler.Topic, subscribeHandler.Name, subscribeHandler.QueueName, subscribeHandler.Durable, DateTimeOffset.Now);
+
+                if (subscribeHandler.Durable)
+                    UpdateSubscribePulse(message.ServerName, subscribeHandler.QueueName);
             }
 
             foreach (var requestHandler in message.RequestHandlers ?? Enumerable.Empty<Shared.Messages.RequestHandler>())
@@ -288,7 +314,6 @@ namespace Grumpy.RipplesMQ.Core
 
                         repositories.Save();
                     }
-
                 }
                 else
                 {
@@ -334,7 +359,6 @@ namespace Grumpy.RipplesMQ.Core
             {
                 MessageBrokerServerName = _messageBrokerServiceInformation.ServerName,
                 MessageBrokerServiceName = _messageBrokerServiceInformation.ServiceName,
-                MessageBrokerInstanceName = _messageBrokerServiceInformation.InstanceName,
                 MessageId = message.MessageId,
                 Topic = message.Topic,
                 PublishDateTime = message.PublishDateTime,
@@ -420,7 +444,7 @@ namespace Grumpy.RipplesMQ.Core
                     if (message.Message.Persistent)
                         SaveMessageState(message.Name, message.Message.MessageId, subscribeHandlerState, message.Message.ErrorCount);
                 }
-            } 
+            }
         }
 
         private void Handler(RequestMessage message)
@@ -456,10 +480,8 @@ namespace Grumpy.RipplesMQ.Core
             {
                 RequesterServerName = message.RequesterServerName,
                 RequesterServiceName = message.RequesterServiceName,
-                RequesterInstanceName = message.RequesterInstanceName,
                 ResponderServerName = _messageBrokerServiceInformation.ServerName,
                 ResponderServiceName = _messageBrokerServiceInformation.ServiceName,
-                ResponderInstanceName = _messageBrokerServiceInformation.InstanceName,
                 RequestId = message.RequestId,
                 ReplyQueue = message.ReplyQueue,
                 RequestMessage = message,
@@ -491,6 +513,11 @@ namespace Grumpy.RipplesMQ.Core
         // ReSharper disable once UnusedParameter.Local
         private void Handler(SendMessageBrokerHandshakeMessage message)
         {
+            lock (MessageBrokerServices)
+            {
+                MessageBrokerServices.RemoveAll(s => s.ErrorCount >= 3);
+            }
+
             RemoveDeadHandlers();
 
             var messageBrokerHandshakeMessage = CreateMessageBrokerHandshakeMessage();
@@ -501,6 +528,8 @@ namespace Grumpy.RipplesMQ.Core
             {
                 SendMessageBrokerHandshakeMessage(messageBrokerService, messageBrokerHandshakeMessage);
             }
+
+            UpdateMessageBrokerServicePulseDateTime();
         }
 
         private void RemoveDeadHandlers()
@@ -561,11 +590,43 @@ namespace Grumpy.RipplesMQ.Core
 
             return messageBrokerServices;
         }
+
         private void SendMessageBrokerHandshakeMessage(Dto.MessageBrokerService messageBrokerService, MessageBrokerHandshakeMessage messageBrokerHandshakeMessage)
         {
-            using (var queue = _queueFactory.CreateRemote(messageBrokerService.ServerName, messageBrokerService.RemoteQueueName, true, RemoteQueueMode.Durable, true))
+            try
             {
-                queue.Send(messageBrokerHandshakeMessage);
+                using (var queue = _queueFactory.CreateRemote(messageBrokerService.ServerName, messageBrokerService.RemoteQueueName, true, RemoteQueueMode.Durable, true))
+                {
+                    if (queue == null)
+                        throw new QueueMissingException(messageBrokerService.RemoteQueueName);
+
+                    queue.Send(messageBrokerHandshakeMessage);
+
+                    messageBrokerService.ErrorCount = 0;
+                }
+            }
+            catch (QueueMissingException)
+            {
+                ++messageBrokerService.ErrorCount;
+            }
+        }
+
+        private void SendCleanOldServicesMessage(string serverName)
+        {
+            try
+            {
+                var messageBrokerService = MessageBrokerServices.Where(s => s.ServerName == serverName).OrderByDescending(m => m.LastHandshakeDateTime).FirstOrDefault();
+
+                if (messageBrokerService != null)
+                {
+                    using (var queue = _queueFactory.CreateRemote(messageBrokerService.ServerName, messageBrokerService.RemoteQueueName, true, RemoteQueueMode.Durable, true))
+                    {
+                        queue?.Send(new CleanOldServicesMessage());
+                    }
+                }
+            }
+            catch (QueueMissingException)
+            {
             }
         }
 
@@ -592,22 +653,71 @@ namespace Grumpy.RipplesMQ.Core
             RemoveMessageStateForDeadMessages();
         }
 
+        // ReSharper disable once UnusedParameter.Local
+        private void Handler(CleanOldServicesMessage cleanOldServicesMessage)
+        {
+            using (var repositories = _repositoriesFactory.Create())
+            {
+                var changes = false;
+
+                var messageBrokerServiceRepository = repositories.MessageBrokerServiceRepository();
+
+                foreach (var messageBrokerService in messageBrokerServiceRepository.GetAll().Where(s => s.ServerName == _messageBrokerServiceInformation.ServerName && s.PulseDateTime < DateTimeOffset.Now.AddDays(-7)))
+                {
+                    DeleteQueue(messageBrokerService.RemoteQueueName);
+                    
+                    changes = true;
+                    
+                    messageBrokerServiceRepository.Delete(messageBrokerService.ServerName, messageBrokerService.ServiceName);
+                }
+
+                var subscriberRepository = repositories.SubscriberRepository();
+
+                foreach (var subscriber in subscriberRepository.GetAll().Where(s => s.ServerName == _messageBrokerServiceInformation.ServerName && s.PulseDateTime < DateTimeOffset.Now.AddDays(-7)))
+                {
+                    DeleteQueue(subscriber.QueueName);
+                    
+                    changes = true;
+                    
+                    subscriberRepository.Delete(subscriber.ServerName, subscriber.QueueName);
+                }
+
+                if (changes)
+                    repositories.Save();
+            }
+        }
+
+        private void DeleteQueue(string queueName)
+        {
+            try
+            {
+                using (var queue = _queueFactory.CreateLocale(queueName, true, LocaleQueueMode.Durable, true))
+                {
+                    queue.Delete();
+                }
+            }
+            catch
+            {
+                // ignored
+            }
+        }
+
         private void UpdateMessageBrokerServiceRepository(IRepositories repositories)
         {
             var messageBrokerServiceRepository = repositories.MessageBrokerServiceRepository();
 
-            var messageBrokerService = messageBrokerServiceRepository.Get(_messageBrokerServiceInformation.ServerName, _messageBrokerServiceInformation.ServiceName, _messageBrokerServiceInformation.InstanceName);
+            var messageBrokerService = messageBrokerServiceRepository.Get(_messageBrokerServiceInformation.ServerName, _messageBrokerServiceInformation.ServiceName);
 
             if (messageBrokerService == null)
             {
-                messageBrokerService = new Entities.MessageBrokerService
+                messageBrokerService = new MessageBrokerService
                 {
                     ServerName = _messageBrokerServiceInformation.ServerName,
                     ServiceName = _messageBrokerServiceInformation.ServiceName,
-                    InstanceName = _messageBrokerServiceInformation.InstanceName,
                     LocaleQueueName = _messageBrokerServiceInformation.LocaleQueueName,
                     RemoteQueueName = _messageBrokerServiceInformation.RemoteQueueName,
-                    LastStartDateTime = DateTimeOffset.Now
+                    StartDateTime = DateTimeOffset.Now,
+                    PulseDateTime = DateTimeOffset.Now
                 };
 
                 messageBrokerServiceRepository.Insert(messageBrokerService);
@@ -616,12 +726,45 @@ namespace Grumpy.RipplesMQ.Core
             {
                 messageBrokerService.LocaleQueueName = _messageBrokerServiceInformation.LocaleQueueName;
                 messageBrokerService.RemoteQueueName = _messageBrokerServiceInformation.RemoteQueueName;
-                messageBrokerService.LastStartDateTime = DateTimeOffset.Now;
-
-                messageBrokerServiceRepository.Update(messageBrokerService);
+                messageBrokerService.StartDateTime = DateTimeOffset.Now;
+                messageBrokerService.PulseDateTime = DateTimeOffset.Now;
             }
 
             repositories.Save();
+        }
+
+        private void UpdateMessageBrokerServicePulseDateTime()
+        {
+            using (var repositories = _repositoriesFactory.Create())
+            {
+                var messageBrokerServiceRepository = repositories.MessageBrokerServiceRepository();
+
+                var messageBrokerService = messageBrokerServiceRepository.Get(_messageBrokerServiceInformation.ServerName, _messageBrokerServiceInformation.ServiceName);
+
+                if (messageBrokerService != null)
+                {
+                    messageBrokerService.PulseDateTime = DateTimeOffset.Now;
+
+                    repositories.Save();
+                }
+            }
+        }
+
+        private void UpdateSubscribePulse(string serverName, string queueName)
+        {
+            using (var repositories = _repositoriesFactory.Create())
+            {
+                var subscriberRepository = repositories.SubscriberRepository();
+
+                var subscriber = subscriberRepository.Get(serverName, queueName);
+
+                if (subscriber != null)
+                {
+                    subscriber.PulseDateTime = DateTimeOffset.Now;
+
+                    repositories.Save();
+                }
+            }
         }
 
         private void LoadMessageBrokers(IRepositories repositories)
@@ -637,7 +780,7 @@ namespace Grumpy.RipplesMQ.Core
             }
         }
 
-        private void UpdateMessageBrokerService(Entities.MessageBrokerService messageBrokerService)
+        private void UpdateMessageBrokerService(MessageBrokerService messageBrokerService)
         {
             UpdateMessageBrokerService(messageBrokerService.ServerName, messageBrokerService.RemoteQueueName);
         }
@@ -794,7 +937,7 @@ namespace Grumpy.RipplesMQ.Core
                 var messageStateRepository = repositories.MessageStateRepository();
                 var messageRepository = repositories.MessageRepository();
 
-                var messageIds = messageRepository.GetAll().Where(m => m.PublishDateTime < DateTimeOffset.Now.AddDays(-1)).Select(m => m.Id).Distinct().Except(messageStateRepository.GetAll().Where(s => s.State != "Completed").Select(s => s.MessageId).Distinct()).ToList();
+                var messageIds = messageRepository.GetAll().Where(m => m.PublishDateTime < DateTimeOffset.Now.AddDays(-7)).Select(m => m.Id).Distinct().Except(messageStateRepository.GetAll().Where(s => s.State != "Completed").Select(s => s.MessageId).Distinct()).ToList();
 
                 if (messageIds.Any())
                 {
@@ -853,11 +996,11 @@ namespace Grumpy.RipplesMQ.Core
                     {
                         ServerName = message.ServerName,
                         ServiceName = message.ServiceName,
-                        InstanceName = message.InstanceName,
                         Name = message.Name,
                         Topic = message.Topic,
                         QueueName = message.QueueName,
-                        LastRegisterDateTime = DateTimeOffset.Now
+                        RegisterDateTime = DateTimeOffset.Now,
+                        PulseDateTime = DateTimeOffset.Now
                     };
 
                     subscriberRepository.Insert(subscriber);
@@ -865,12 +1008,10 @@ namespace Grumpy.RipplesMQ.Core
                 else
                 {
                     subscriber.ServiceName = message.ServiceName;
-                    subscriber.InstanceName = message.InstanceName;
                     subscriber.Name = message.Name;
                     subscriber.Topic = message.Topic;
-                    subscriber.LastRegisterDateTime = DateTimeOffset.Now;
-
-                    subscriberRepository.Update(subscriber);
+                    subscriber.RegisterDateTime = DateTimeOffset.Now;
+                    subscriber.PulseDateTime = DateTimeOffset.Now;
                 }
 
                 repositories.Save();

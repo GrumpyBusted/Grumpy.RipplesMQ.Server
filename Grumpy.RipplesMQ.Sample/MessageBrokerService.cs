@@ -1,5 +1,6 @@
 ﻿using System.Configuration;
 using System.Threading;
+using Grumpy.Common.Extensions;
 using Grumpy.RipplesMQ.Core.Interfaces;
 using Grumpy.RipplesMQ.Server;
 using Grumpy.ServiceBase;
@@ -14,15 +15,12 @@ namespace Grumpy.RipplesMQ.Sample
         {
             var appSettings = ConfigurationManager.AppSettings;
 
-            var messageBrokerServiceConfig = new MessageBrokerServiceConfig
-            {
-                ServiceName = ServiceName,
-                InstanceName = InstanceName,
-                DatabaseServer = appSettings["DatabaseServer"],
-                DatabaseName = appSettings["DatabaseName"]
-            };
- 
-            _messageBroker = MessageBrokerBuilder.Build(messageBrokerServiceConfig);
+            var messageBrokerBuilder = new MessageBrokerBuilder().WithServiceName(ServiceName);
+
+            if (!appSettings["DatabaseServer"].NullOrEmpty())
+                messageBrokerBuilder = messageBrokerBuilder.WithRepository(appSettings["DatabaseServer"], appSettings["DatabaseNAme"]);
+
+            _messageBroker = messageBrokerBuilder.Build();
 
             _messageBroker.Start(cancellationToken);
         }

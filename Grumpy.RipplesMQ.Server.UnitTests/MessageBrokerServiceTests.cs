@@ -1,7 +1,6 @@
 ﻿using System.Threading;
 using FluentAssertions;
 using Grumpy.RipplesMQ.Core;
-using Grumpy.RipplesMQ.Core.Interfaces;
 using Xunit;
 
 namespace Grumpy.RipplesMQ.Server.UnitTests
@@ -9,27 +8,27 @@ namespace Grumpy.RipplesMQ.Server.UnitTests
     public class MessageBrokerServiceTests
     {
         [Fact]
-        public void MessageBrokerServiceCanStartAndStop()
+        public void CanBuildMessageBroker()
         {
-            var config = new MessageBrokerServiceConfig
-            {
-                ServiceName = "MyRipplesMQService",
-                InstanceName = "1"
-            };
+            var cut = (MessageBroker)new MessageBrokerBuilder();
 
-            var cut = MessageBrokerBuilder.Build(config);;
-            
-            cut.Start(CancellationToken.None);
-            Thread.Sleep(1000);
-//            cut.Stop();
+            cut.GetType().Should().Be(typeof(MessageBroker));
         }
 
         [Fact]
-        public void CanBuildMessageBroker()
+        public void CanBuildMessageBrokerUsingConfig()
         {
-            var cut = MessageBrokerBuilder.Build(null);
+            new MessageBrokerBuilder().WithServiceName("MyRipplesMQService").WithRemoteQueueName("MyRipplesMQService.RemoteQueue").WithRepository(@"(localDB)/MSSQLLocalDB", "RipplesMQ_Database").Build();
+        }
 
-            cut.GetType().Should().Be(typeof(MessageBroker));
+        [Fact]
+        public void MessageBrokerCanStartAndStop()
+        {
+            var cut = new MessageBrokerBuilder().Build();
+            
+            cut.Start(CancellationToken.None);
+            Thread.Sleep(1000);
+            cut.Stop();
         }
     }
 }

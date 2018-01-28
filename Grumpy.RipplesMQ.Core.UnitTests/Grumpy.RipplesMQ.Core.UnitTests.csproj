@@ -34,19 +34,18 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="MessageBrokerFactoryTests.cs" />
     <Compile Include="MessageBrokerTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Grumpy.Common">
-      <Version>1.2.5</Version>
+      <Version>1.2.7</Version>
     </PackageReference>
     <PackageReference Include="Grumpy.MessageQueue">
-      <Version>1.2.1</Version>
+      <Version>1.2.2</Version>
     </PackageReference>
     <PackageReference Include="Grumpy.RipplesMQ.Shared">
-      <Version>1.2.4</Version>
+      <Version>1.2.5</Version>
     </PackageReference>
     <PackageReference Include="Grumpy.TestTools">
       <Version>1.2.2</Version>
@@ -56,6 +55,10 @@
     <ProjectReference Include="..\Grumpy.RipplesMQ.Core\Grumpy.RipplesMQ.Core.csproj">
       <Project>{62447414-7E5C-4861-A68E-963C2A1EE956}</Project>
       <Name>Grumpy.RipplesMQ.Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Grumpy.RipplesMQ.Entity\Grumpy.RipplesMQ.Entity.csproj">
+      <Project>{44854D20-76E0-4A1A-AA1B-C4F47F018C5B}</Project>
+      <Name>Grumpy.RipplesMQ.Entity</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

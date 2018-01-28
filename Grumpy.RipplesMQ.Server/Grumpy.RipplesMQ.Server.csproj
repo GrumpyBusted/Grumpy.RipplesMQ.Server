@@ -20,6 +20,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <DocumentationFile>bin\Debug\Grumpy.RipplesMQ.Server.xml</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -28,6 +29,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <DocumentationFile>bin\Release\Grumpy.RipplesMQ.Server.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -36,7 +38,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="MessageBrokerBuilder.cs" />
-    <Compile Include="MessageBrokerServiceConfig.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -55,13 +56,13 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Grumpy.Common">
-      <Version>1.2.5</Version>
+      <Version>1.2.7</Version>
     </PackageReference>
     <PackageReference Include="Grumpy.Entity">
       <Version>0.9.5</Version>
     </PackageReference>
     <PackageReference Include="Grumpy.MessageQueue">
-      <Version>1.2.1</Version>
+      <Version>1.2.2</Version>
     </PackageReference>
   </ItemGroup>
   <ItemGroup>

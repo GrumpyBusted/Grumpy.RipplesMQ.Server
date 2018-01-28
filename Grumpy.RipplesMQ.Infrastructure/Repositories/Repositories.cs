@@ -4,41 +4,49 @@ using Grumpy.RipplesMQ.Entity;
 
 namespace Grumpy.RipplesMQ.Infrastructure.Repositories
 {
+    /// <inheritdoc />
     public class Repositories : IRepositories
     {
         private readonly Entities _entities;
         private bool _disposed;
 
+        /// <inheritdoc />
         public Repositories(IEntityConnectionConfig entityConnectionConfig)
         {
             _entities = new Entities(entityConnectionConfig);
         }
 
+        /// <inheritdoc />
         public IMessageRepository MessageRepository()
         {
             return new MessageRepository(_entities);
         }
 
+        /// <inheritdoc />
         public IMessageBrokerServiceRepository MessageBrokerServiceRepository()
         {
             return new MessageBrokerServiceRepository(_entities);
         }
 
+        /// <inheritdoc />
         public IMessageStateRepository MessageStateRepository()
         {
             return new MessageStateRepository(_entities);
         }
 
+        /// <inheritdoc />
         public ISubscriberRepository SubscriberRepository()
         {
             return new SubscriberRepository(_entities);
         }
 
+        /// <inheritdoc />
         public void Save()
         {
             _entities.SaveChanges();
         }
 
+        /// <inheritdoc />
         public void Dispose()
         {
             Dispose(true);
@@ -51,7 +59,8 @@ namespace Grumpy.RipplesMQ.Infrastructure.Repositories
             {
                 _disposed = true;
 
-                _entities.Dispose();
+                if (disposing)
+                    _entities.Dispose();
             }
         }
     }

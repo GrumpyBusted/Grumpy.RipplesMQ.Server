@@ -15,11 +15,11 @@
         <language>en-US</language>
         <copyright>Copyright © Busted-Janum 2018</copyright>
         <dependencies>
-            <dependency id="Grumpy.Common" version="1.2.5" />
+            <dependency id="Grumpy.Common" version="1.2.7" />
             <dependency id="Grumpy.Entity" version="0.9.5" />
             <dependency id="Grumpy.Json" version="1.2.3" />
-            <dependency id="Grumpy.MessageQueue" version="1.2.1" />
-            <dependency id="Grumpy.RipplesMQ.Shared" version="1.2.4" />
+            <dependency id="Grumpy.MessageQueue" version="1.2.2" />
+            <dependency id="Grumpy.RipplesMQ.Shared" version="1.2.5" />
             <dependency id="EntityFramework" version="6.2.0" />
         </dependencies>
     </metadata>

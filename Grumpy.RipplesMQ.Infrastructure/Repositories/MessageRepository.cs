@@ -14,16 +14,9 @@ namespace Grumpy.RipplesMQ.Infrastructure.Repositories
             _entities = entities;
         }
 
-        public void Insert(Core.Entities.Message message)
+        public void Insert(Message message)
         {
-            _entities.Message.Add(new Message
-            {
-                Id = message.Id,
-                Topic = message.Topic,
-                Type = message.Type,
-                Body = message.Body,
-                PublishDateTime = message.PublishDateTime
-            });
+            _entities.Message.Add(message);
         }
 
         public void Delete(string id)
@@ -31,21 +24,9 @@ namespace Grumpy.RipplesMQ.Infrastructure.Repositories
             _entities.Message.RemoveRange(_entities.Message.Where(m => m.Id == id));
         }
 
-        public IEnumerable<Core.Entities.Message> GetAll()
+        public IEnumerable<Message> GetAll()
         {
-            return _entities.Message.ToList().Select(FromEntity);
-        }
-
-        private static Core.Entities.Message FromEntity(Message message)
-        {
-            return message == null ? null : new Core.Entities.Message
-            {
-                Id = message.Id,
-                Topic = message.Topic,
-                Type = message.Type,
-                Body = message.Body,
-                PublishDateTime = message.PublishDateTime
-            };
+            return _entities.Message.ToList();
         }
     }
 }

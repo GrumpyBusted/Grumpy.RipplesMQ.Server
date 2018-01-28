@@ -34,15 +34,34 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="MessageBrokerServiceRepositoryTests.cs" />
+    <Compile Include="MessageRepositoryTests.cs" />
+    <Compile Include="MessageStateRepositoryTests.cs" />
+    <Compile Include="SubscriberRepositoryTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RepositoriesFactoryTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Grumpy.Common">
-      <Version>1.2.5</Version>
+      <Version>1.2.7</Version>
     </PackageReference>
     <PackageReference Include="Grumpy.TestTools">
       <Version>1.2.2</Version>
     </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Grumpy.RipplesMQ.Core\Grumpy.RipplesMQ.Core.csproj">
+      <Project>{62447414-7E5C-4861-A68E-963C2A1EE956}</Project>
+      <Name>Grumpy.RipplesMQ.Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Grumpy.RipplesMQ.Entity\Grumpy.RipplesMQ.Entity.csproj">
+      <Project>{44854D20-76E0-4A1A-AA1B-C4F47F018C5B}</Project>
+      <Name>Grumpy.RipplesMQ.Entity</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Grumpy.RipplesMQ.Infrastructure\Grumpy.RipplesMQ.Infrastructure.csproj">
+      <Project>{12018202-003F-431D-9E4A-361266DAAED2}</Project>
+      <Name>Grumpy.RipplesMQ.Infrastructure</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

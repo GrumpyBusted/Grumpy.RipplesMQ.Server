@@ -7,4 +7,18 @@
     <Property Name="ParentElementType" Value="SqlTable" />
     <Property Name="NewName" Value="[IX_MessageState_MessageId]" />
   </Operation>
+  <Operation Name="Rename Refactor" Key="2262a099-4492-4c67-8ab0-33076ed39ec4" ChangeDateTime="01/27/2018 21:28:14">
+    <Property Name="ElementName" Value="[dbo].[MessageBrokerService].[HandshakeDateTime]" />
+    <Property Name="ElementType" Value="SqlSimpleColumn" />
+    <Property Name="ParentElementName" Value="[dbo].[MessageBrokerService]" />
+    <Property Name="ParentElementType" Value="SqlTable" />
+    <Property Name="NewName" Value="PulseDateTime" />
+  </Operation>
+  <Operation Name="Rename Refactor" Key="3358fa22-8d2f-4581-9e27-53d89ccb3a68" ChangeDateTime="01/27/2018 21:30:05">
+    <Property Name="ElementName" Value="[dbo].[Subscriber].[LastRegisterDateTime]" />
+    <Property Name="ElementType" Value="SqlSimpleColumn" />
+    <Property Name="ParentElementName" Value="[dbo].[Subscriber]" />
+    <Property Name="ParentElementType" Value="SqlTable" />
+    <Property Name="NewName" Value="RegisterDateTime" />
+  </Operation>
 </Operations>

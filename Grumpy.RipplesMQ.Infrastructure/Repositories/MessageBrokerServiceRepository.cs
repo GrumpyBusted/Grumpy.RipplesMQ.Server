@@ -14,54 +14,24 @@ namespace Grumpy.RipplesMQ.Infrastructure.Repositories
             _entities = entities;
         }
 
-        public void Insert(Core.Entities.MessageBrokerService messageBrokerService)
+        public void Insert(MessageBrokerService messageBrokerService)
         {
-            _entities.MessageBrokerService.Add(new MessageBrokerService
-            {
-                ServerName = messageBrokerService.ServerName,
-                ServiceName = messageBrokerService.ServiceName,
-                InstanceName = messageBrokerService.InstanceName,
-                RemoteQueueName = messageBrokerService.RemoteQueueName,
-                LocaleQueueName = messageBrokerService.LocaleQueueName,
-                LastStartDateTime = messageBrokerService.LastStartDateTime
-            });
+            _entities.MessageBrokerService.Add(messageBrokerService);
         }
 
-        public void Update(Core.Entities.MessageBrokerService messageBrokerService)
+        public MessageBrokerService Get(string serverName, string serviceName)
         {
-            var entity = GetEntity(messageBrokerService.ServerName, messageBrokerService.ServiceName, messageBrokerService.InstanceName);
-
-            entity.RemoteQueueName = messageBrokerService.RemoteQueueName;
-            entity.LocaleQueueName = messageBrokerService.LocaleQueueName;
-            entity.LastStartDateTime = messageBrokerService.LastStartDateTime;
+            return _entities.MessageBrokerService.SingleOrDefault(e => e.ServerName == serverName && e.ServiceName == serviceName);
         }
 
-        public Core.Entities.MessageBrokerService Get(string serverName, string serviceName, string instanceName)
+        public IEnumerable<MessageBrokerService> GetAll()
         {
-            return FromEntity(GetEntity(serverName, serviceName, instanceName));
+            return _entities.MessageBrokerService;
         }
 
-        public IEnumerable<Core.Entities.MessageBrokerService> GetAll()
+        public void Delete(string serverName, string serviceName)
         {
-            return _entities.MessageBrokerService.ToList().Select(FromEntity);
-        }
-        
-        private static Core.Entities.MessageBrokerService FromEntity(MessageBrokerService messageBrokerService)
-        {
-            return messageBrokerService == null ? null : new Core.Entities.MessageBrokerService
-            {
-                ServerName = messageBrokerService.ServerName,
-                ServiceName = messageBrokerService.ServiceName,
-                InstanceName = messageBrokerService.InstanceName,
-                RemoteQueueName = messageBrokerService.RemoteQueueName,
-                LocaleQueueName = messageBrokerService.LocaleQueueName,
-                LastStartDateTime = messageBrokerService.LastStartDateTime
-            };
-        }
-
-        private MessageBrokerService GetEntity(string serverName, string serviceName, string instanceName)
-        {
-            return _entities.MessageBrokerService.SingleOrDefault(e => e.ServerName == serverName && e.ServiceName == serviceName && e.InstanceName == instanceName);
+            _entities.MessageBrokerService.Remove(Get(serverName, serviceName));
         }
     }
 }

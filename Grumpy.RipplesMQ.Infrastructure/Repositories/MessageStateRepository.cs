@@ -14,26 +14,19 @@ namespace Grumpy.RipplesMQ.Infrastructure.Repositories
             _entities = entities;
         }
 
-        public void Insert(Core.Entities.MessageState messageState)
+        public void Insert(MessageState messageState)
         {
-            _entities.MessageState.Add(new MessageState
-            {
-                MessageId = messageState.MessageId,
-                SubscriberName = messageState.SubscriberName,
-                State = messageState.State,
-                ErrorCount = messageState.ErrorCount,
-                UpdateDateTime = messageState.UpdateDateTime
-            });
+            _entities.MessageState.Add(messageState);
         }
 
-        public Core.Entities.MessageState Get(string messageId, string subscriberName)
+        public MessageState Get(string messageId, string subscriberName)
         {
-            return FromEntity(GetAllCurrent().SingleOrDefault(e => e.MessageId == messageId && e.SubscriberName == subscriberName));
+            return GetAllCurrent().SingleOrDefault(e => e.MessageId == messageId && e.SubscriberName == subscriberName);
         }
 
-        public IEnumerable<Core.Entities.MessageState> GetAll()
+        public IEnumerable<MessageState> GetAll()
         {
-            return GetAllCurrent().ToList().Select(FromEntity);
+            return GetAllCurrent();
         }
 
         public void DeleteBySubscriber(string subscriberName)
@@ -49,18 +42,6 @@ namespace Grumpy.RipplesMQ.Infrastructure.Repositories
         private IQueryable<MessageState> GetAllCurrent()
         {
             return _entities.MessageState.Where(e => e.Id == _entities.MessageState.Where(m => m.MessageId == e.MessageId && m.SubscriberName == e.SubscriberName).Select(s => s.Id).Max());
-        }
-
-        private static Core.Entities.MessageState FromEntity(MessageState messageState)
-        {
-            return messageState == null ? null : new Core.Entities.MessageState
-            {
-                MessageId = messageState.MessageId,
-                SubscriberName = messageState.SubscriberName,
-                State = messageState.State,
-                ErrorCount = messageState.ErrorCount,
-                UpdateDateTime = messageState.UpdateDateTime
-            };
         }
     }
 }

@@ -18,8 +18,8 @@ namespace Grumpy.RipplesMQ.Entity
         public string Topic { get; set; }
         public string ServerName { get; set; }
         public string ServiceName { get; set; }
-        public string InstanceName { get; set; }
         public string QueueName { get; set; }
-        public System.DateTimeOffset LastRegisterDateTime { get; set; }
+        public System.DateTimeOffset RegisterDateTime { get; set; }
+        public System.DateTimeOffset PulseDateTime { get; set; }
     }
 }
