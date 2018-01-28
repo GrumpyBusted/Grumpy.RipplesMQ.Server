@@ -57,12 +57,10 @@ var builder = new MessageBrokerBuilder()
 
 using (var messageBroker = builder.Build())
 {
-    // Start the Message Broker
     messageBroker.Start(cancellationToken);
 
-    // Wait forever :-)
+    // Keep process alive :-)
 
-    // Stop the Message Broker
     messageBroker.Stop();
 }
 ```
