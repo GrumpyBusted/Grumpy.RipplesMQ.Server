@@ -391,9 +391,9 @@ namespace Grumpy.RipplesMQ.Core
 
         private Dto.SubscribeHandler FindSubscribeHandler(string name, string topic, bool localeFirst)
         {
-            var subscribeHandler = SubscribeHandlers.Where(s => IsLocale(s.ServerName) == localeFirst && s.Name == name && s.Topic == topic && s.LastHandshakeDateTime != null).OrderByDescending(o => o.LastHandshakeDateTime).FirstOrDefault();
+            var subscribeHandler = SubscribeHandlers.Where(s => IsLocale(s.ServerName) == localeFirst && s.Name == name && s.Topic == topic && s.HandshakeDateTime != null).OrderByDescending(o => o.HandshakeDateTime).FirstOrDefault();
 
-            return subscribeHandler ?? SubscribeHandlers.Where(s => IsLocale(s.ServerName) != localeFirst && s.Name == name && s.Topic == topic && s.LastHandshakeDateTime != null).OrderByDescending(o => o.LastHandshakeDateTime).FirstOrDefault();
+            return subscribeHandler ?? SubscribeHandlers.Where(s => IsLocale(s.ServerName) != localeFirst && s.Name == name && s.Topic == topic && s.HandshakeDateTime != null).OrderByDescending(o => o.HandshakeDateTime).FirstOrDefault();
         }
 
         private SubscribeHandlerState SendPublishMessage(Dto.SubscribeHandler subscribeHandler, PublishMessage message)
@@ -449,7 +449,7 @@ namespace Grumpy.RipplesMQ.Core
 
         private void Handler(RequestMessage message)
         {
-            var requestHandler = RequestHandlers.Where(r => r.Name == message.Name && IsLocale(r.ServerName) && r.LastHandshakeDateTime != null).OrderByDescending(r => r.LastHandshakeDateTime).FirstOrDefault();
+            var requestHandler = RequestHandlers.Where(r => r.Name == message.Name && IsLocale(r.ServerName) && r.HandshakeDateTime != null).OrderByDescending(r => r.HandshakeDateTime).FirstOrDefault();
 
             IQueue queue = null;
 
@@ -462,7 +462,7 @@ namespace Grumpy.RipplesMQ.Core
             }
             else
             {
-                requestHandler = RequestHandlers.Where(r => r.Name == message.Name && r.ServerName != _messageBrokerServiceInformation.ServerName && r.LastHandshakeDateTime != null).OrderByDescending(r => r.LastHandshakeDateTime).FirstOrDefault();
+                requestHandler = RequestHandlers.Where(r => r.Name == message.Name && r.ServerName != _messageBrokerServiceInformation.ServerName && r.HandshakeDateTime != null).OrderByDescending(r => r.HandshakeDateTime).FirstOrDefault();
 
                 if (requestHandler != null)
                     queue = RemoteMessageBrokerQueue(requestHandler.ServerName);
@@ -538,22 +538,22 @@ namespace Grumpy.RipplesMQ.Core
 
             lock (SubscribeHandlers)
             {
-                foreach (var subscribeHandler in SubscribeHandlers.Where(e => e.Queue != null && e.LastHandshakeDateTime != null && e.LastHandshakeDateTime < time && !e.Durable))
+                foreach (var subscribeHandler in SubscribeHandlers.Where(e => e.Queue != null && e.HandshakeDateTime != null && e.HandshakeDateTime < time && !e.Durable))
                 {
                     subscribeHandler.Queue.Dispose();
                 }
 
-                SubscribeHandlers.RemoveAll(e => e.LastHandshakeDateTime != null && e.LastHandshakeDateTime < time && !e.Durable);
+                SubscribeHandlers.RemoveAll(e => e.HandshakeDateTime != null && e.HandshakeDateTime < time && !e.Durable);
             }
 
             lock (RequestHandlers)
             {
-                foreach (var requestHandler in RequestHandlers.Where(e => e.Queue != null && e.LastHandshakeDateTime != null && e.LastHandshakeDateTime < time))
+                foreach (var requestHandler in RequestHandlers.Where(e => e.Queue != null && e.HandshakeDateTime != null && e.HandshakeDateTime < time))
                 {
                     requestHandler.Queue.Dispose();
                 }
 
-                RequestHandlers.RemoveAll(e => e.LastHandshakeDateTime != null && e.LastHandshakeDateTime < time);
+                RequestHandlers.RemoveAll(e => e.HandshakeDateTime != null && e.HandshakeDateTime < time);
             }
         }
 
@@ -615,7 +615,7 @@ namespace Grumpy.RipplesMQ.Core
         {
             try
             {
-                var messageBrokerService = MessageBrokerServices.Where(s => s.ServerName == serverName).OrderByDescending(m => m.LastHandshakeDateTime).FirstOrDefault();
+                var messageBrokerService = MessageBrokerServices.Where(s => s.ServerName == serverName).OrderByDescending(m => m.HandshakeDateTime).FirstOrDefault();
 
                 if (messageBrokerService != null)
                 {
@@ -803,14 +803,14 @@ namespace Grumpy.RipplesMQ.Core
                         Id = id,
                         ServerName = serverName,
                         RemoteQueueName = remoteQueueName,
-                        LastHandshakeDateTime = handshakeDateTime,
+                        HandshakeDateTime = handshakeDateTime,
                         Queue = queue
                     });
                 }
                 else
                 {
                     messageBrokerService.Id = id ?? messageBrokerService.Id;
-                    messageBrokerService.LastHandshakeDateTime = handshakeDateTime ?? messageBrokerService.LastHandshakeDateTime;
+                    messageBrokerService.HandshakeDateTime = handshakeDateTime ?? messageBrokerService.HandshakeDateTime;
                     messageBrokerService.Queue = queue ?? messageBrokerService.Queue;
                 }
             }
@@ -841,7 +841,7 @@ namespace Grumpy.RipplesMQ.Core
                         Name = name,
                         QueueName = queueName,
                         Durable = durable,
-                        LastHandshakeDateTime = handshakeDateTime,
+                        HandshakeDateTime = handshakeDateTime,
                         Queue = queue
                     });
                 }
@@ -849,7 +849,7 @@ namespace Grumpy.RipplesMQ.Core
                 {
                     subscribeHandler.Topic = topic ?? subscribeHandler.Topic;
                     subscribeHandler.Name = name ?? subscribeHandler.Name;
-                    subscribeHandler.LastHandshakeDateTime = handshakeDateTime ?? subscribeHandler.LastHandshakeDateTime;
+                    subscribeHandler.HandshakeDateTime = handshakeDateTime ?? subscribeHandler.HandshakeDateTime;
                     subscribeHandler.Queue = queue ?? subscribeHandler.Queue;
                 }
             }
@@ -873,14 +873,14 @@ namespace Grumpy.RipplesMQ.Core
                         ServerName = serverName,
                         Name = name,
                         QueueName = queueName,
-                        LastHandshakeDateTime = handshakeDateTime,
+                        HandshakeDateTime = handshakeDateTime,
                         Queue = queue
                     });
                 }
                 else
                 {
                     requestHandler.Name = name ?? requestHandler.Name;
-                    requestHandler.LastHandshakeDateTime = handshakeDateTime ?? requestHandler.LastHandshakeDateTime;
+                    requestHandler.HandshakeDateTime = handshakeDateTime ?? requestHandler.HandshakeDateTime;
                     requestHandler.Queue = queue ?? requestHandler.Queue;
                 }
             }
@@ -1054,7 +1054,7 @@ namespace Grumpy.RipplesMQ.Core
 
         private IQueue RemoteMessageBrokerQueue(string serverName)
         {
-            var messageBrokerService = MessageBrokerServices.Where(b => b.ServerName == serverName && b.LastHandshakeDateTime != null).OrderByDescending(m => m.LastHandshakeDateTime).FirstOrDefault();
+            var messageBrokerService = MessageBrokerServices.Where(b => b.ServerName == serverName && b.HandshakeDateTime != null).OrderByDescending(m => m.HandshakeDateTime).FirstOrDefault();
 
             if (messageBrokerService != null && messageBrokerService.Queue == null)
                 messageBrokerService.Queue = _queueFactory.CreateRemote(messageBrokerService.ServerName, messageBrokerService.RemoteQueueName, true, RemoteQueueMode.Durable, true);

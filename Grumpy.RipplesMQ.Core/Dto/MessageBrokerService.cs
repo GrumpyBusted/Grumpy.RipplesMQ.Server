@@ -24,9 +24,9 @@ namespace Grumpy.RipplesMQ.Core.Dto
         public string RemoteQueueName { get; set; }
         
         /// <summary>
-        /// Last Handshake Timestamp
+        /// Handshake Timestamp
         /// </summary>
-        public DateTimeOffset? LastHandshakeDateTime { get; set; }
+        public DateTimeOffset? HandshakeDateTime { get; set; }
         
         /// <summary>
         /// Queue

@@ -190,8 +190,8 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
 
             using (var cut = CreateMessageBroker())
             {
-                cut.SubscribeHandlers.Add(new Dto.SubscribeHandler { ServerName = "MyTestServer", QueueName = "MyQueueNameA", LastHandshakeDateTime = DateTimeOffset.Now.AddMinutes(-30), Queue = queue });
-                cut.SubscribeHandlers.Add(new Dto.SubscribeHandler { ServerName = "MyTestServer", QueueName = "MyQueueNameB", LastHandshakeDateTime = DateTimeOffset.Now });
+                cut.SubscribeHandlers.Add(new Dto.SubscribeHandler { ServerName = "MyTestServer", QueueName = "MyQueueNameA", HandshakeDateTime = DateTimeOffset.Now.AddMinutes(-30), Queue = queue });
+                cut.SubscribeHandlers.Add(new Dto.SubscribeHandler { ServerName = "MyTestServer", QueueName = "MyQueueNameB", HandshakeDateTime = DateTimeOffset.Now });
 
                 HandleMessage(cut, new SendMessageBrokerHandshakeMessage());
 
@@ -209,8 +209,8 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
 
             using (var cut = CreateMessageBroker())
             {
-                cut.RequestHandlers.Add(new Dto.RequestHandler { ServerName = "MyTestServer", QueueName = "MyQueueNameA", LastHandshakeDateTime = DateTimeOffset.Now.AddMinutes(-30), Queue = queue });
-                cut.RequestHandlers.Add(new Dto.RequestHandler { ServerName = "MyTestServer", QueueName = "MyQueueNameB", LastHandshakeDateTime = DateTimeOffset.Now });
+                cut.RequestHandlers.Add(new Dto.RequestHandler { ServerName = "MyTestServer", QueueName = "MyQueueNameA", HandshakeDateTime = DateTimeOffset.Now.AddMinutes(-30), Queue = queue });
+                cut.RequestHandlers.Add(new Dto.RequestHandler { ServerName = "MyTestServer", QueueName = "MyQueueNameB", HandshakeDateTime = DateTimeOffset.Now });
 
                 HandleMessage(cut, new SendMessageBrokerHandshakeMessage());
 
@@ -627,7 +627,7 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
         }
 
         [Fact]
-        public void HandlingMessageBusServiceHandshakeMessageShouldUpdateSubscribeHandlerLastHandshakeDateTime()
+        public void HandlingMessageBusServiceHandshakeMessageShouldUpdateSubscribeHandlerHandshakeDateTime()
         {
             using (var cut = CreateMessageBroker())
             {
@@ -640,12 +640,12 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
                 });
 
                 cut.SubscribeHandlers.ElementAt(0).QueueName.Should().Be("MySubscribeQueue");
-                cut.SubscribeHandlers.ElementAt(0).LastHandshakeDateTime.Should().NotBeNull();
+                cut.SubscribeHandlers.ElementAt(0).HandshakeDateTime.Should().NotBeNull();
             }
         }
 
         [Fact]
-        public void HandlingMessageBusServiceHandshakeMessageShouldUpdateRequestHandlerLastHandshakeDateTime()
+        public void HandlingMessageBusServiceHandshakeMessageShouldUpdateRequestHandlerHandshakeDateTime()
         {
             using (var cut = CreateMessageBroker())
             {
@@ -657,7 +657,7 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
                 });
 
                 cut.RequestHandlers.ElementAt(0).QueueName.Should().Be("MyRequestQueue");
-                cut.RequestHandlers.ElementAt(0).LastHandshakeDateTime.Should().NotBeNull();
+                cut.RequestHandlers.ElementAt(0).HandshakeDateTime.Should().NotBeNull();
             }
         }
 
@@ -705,10 +705,10 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
         {
             using (var cut = CreateMessageBroker())
             {
-                cut.SubscribeHandlers.Add(new Dto.SubscribeHandler { Topic = "MyTopic", Name = "SubscriberA", LastHandshakeDateTime = DateTimeOffset.Now });
-                cut.SubscribeHandlers.Add(new Dto.SubscribeHandler { Topic = "MyTopic", Name = "SubscriberA", LastHandshakeDateTime = DateTimeOffset.Now });
-                cut.SubscribeHandlers.Add(new Dto.SubscribeHandler { Topic = "TheirTopic", Name = "SubscriberB", LastHandshakeDateTime = DateTimeOffset.Now });
-                cut.SubscribeHandlers.Add(new Dto.SubscribeHandler { Topic = "MyTopic", Name = "SubscriberC", LastHandshakeDateTime = DateTimeOffset.Now });
+                cut.SubscribeHandlers.Add(new Dto.SubscribeHandler { Topic = "MyTopic", Name = "SubscriberA", HandshakeDateTime = DateTimeOffset.Now });
+                cut.SubscribeHandlers.Add(new Dto.SubscribeHandler { Topic = "MyTopic", Name = "SubscriberA", HandshakeDateTime = DateTimeOffset.Now });
+                cut.SubscribeHandlers.Add(new Dto.SubscribeHandler { Topic = "TheirTopic", Name = "SubscriberB", HandshakeDateTime = DateTimeOffset.Now });
+                cut.SubscribeHandlers.Add(new Dto.SubscribeHandler { Topic = "MyTopic", Name = "SubscriberC", HandshakeDateTime = DateTimeOffset.Now });
 
                 HandleMessage(cut, new PublishMessage { ReplyQueue = "MyReplyQueue", Topic = "MyTopic", Persistent = true, Body = "Message" });
             }
@@ -744,7 +744,7 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
         {
             using (var cut = CreateMessageBroker())
             {
-                cut.SubscribeHandlers.Add(new Dto.SubscribeHandler { Topic = "MyTopic", Name = "Subscriber", ServerName = "MyTestServer", LastHandshakeDateTime = DateTimeOffset.Now });
+                cut.SubscribeHandlers.Add(new Dto.SubscribeHandler { Topic = "MyTopic", Name = "Subscriber", ServerName = "MyTestServer", HandshakeDateTime = DateTimeOffset.Now });
 
                 HandleMessage(cut, new PublishMessage { Topic = "MyTopic", Persistent = true, Body = "Message" });
             }
@@ -789,7 +789,7 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
 
             using (var cut = CreateMessageBroker())
             {
-                cut.SubscribeHandlers.Add(new Dto.SubscribeHandler { Topic = "MyTopic", ServerName = "MyTestServer", Name = "MySubscriber", LastHandshakeDateTime = DateTimeOffset.Now, QueueName = "SubscriberQueueName" });
+                cut.SubscribeHandlers.Add(new Dto.SubscribeHandler { Topic = "MyTopic", ServerName = "MyTestServer", Name = "MySubscriber", HandshakeDateTime = DateTimeOffset.Now, QueueName = "SubscriberQueueName" });
 
                 HandleMessage(cut, new PublishSubscriberMessage { SubscriberName = "MySubscriber", Message = new PublishMessage { Topic = "MyTopic" } });
             }
@@ -805,7 +805,7 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
 
             using (var cut = CreateMessageBroker())
             {
-                cut.SubscribeHandlers.Add(new Dto.SubscribeHandler { Topic = "MyTopic", Name = "MySubscriber", ServerName = "MyTestServer", LastHandshakeDateTime = null, QueueName = "SubscriberQueueName" });
+                cut.SubscribeHandlers.Add(new Dto.SubscribeHandler { Topic = "MyTopic", Name = "MySubscriber", ServerName = "MyTestServer", HandshakeDateTime = null, QueueName = "SubscriberQueueName" });
 
                 HandleMessage(cut, new PublishSubscriberMessage { SubscriberName = "MySubscriber", Message = new PublishMessage { Topic = "MyTopic", Persistent = true } });
             }
@@ -821,8 +821,8 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
 
             using (var cut = CreateMessageBroker())
             {
-                cut.MessageBrokerServices.Add(new Dto.MessageBrokerService { ServerName = "AnotherServer", RemoteQueueName = "RemoteMessageBrokerQueue", LastHandshakeDateTime = DateTimeOffset.Now });
-                cut.SubscribeHandlers.Add(new Dto.SubscribeHandler { Topic = "MyTopic", Name = "MySubscriber", ServerName = "AnotherServer", LastHandshakeDateTime = DateTimeOffset.Now, QueueName = "AnotherSubscribeQueue" });
+                cut.MessageBrokerServices.Add(new Dto.MessageBrokerService { ServerName = "AnotherServer", RemoteQueueName = "RemoteMessageBrokerQueue", HandshakeDateTime = DateTimeOffset.Now });
+                cut.SubscribeHandlers.Add(new Dto.SubscribeHandler { Topic = "MyTopic", Name = "MySubscriber", ServerName = "AnotherServer", HandshakeDateTime = DateTimeOffset.Now, QueueName = "AnotherSubscribeQueue" });
 
                 HandleMessage(cut, new PublishMessage { Topic = "MyTopic" });
                 HandleMessage(cut, new PublishSubscriberMessage { SubscriberName = "MySubscriber", Message = new PublishMessage { Topic = "MyTopic" } });
@@ -883,10 +883,10 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
 
             using (var cut = CreateMessageBroker())
             {
-                cut.MessageBrokerServices.Add(new Dto.MessageBrokerService { ServerName = "MyTestServer", RemoteQueueName = "LocaleMessageBrokerQueue", LastHandshakeDateTime = DateTimeOffset.Now });
-                cut.MessageBrokerServices.Add(new Dto.MessageBrokerService { ServerName = "AnotherServer", RemoteQueueName = "RemoteMessageBrokerQueue", LastHandshakeDateTime = DateTimeOffset.Now });
-                cut.SubscribeHandlers.Add(new Dto.SubscribeHandler { Topic = "MyTopic", Name = "MySubscriber", ServerName = "MyTestServer", LastHandshakeDateTime = DateTimeOffset.Now, QueueName = "MySubscribeQueue" });
-                cut.SubscribeHandlers.Add(new Dto.SubscribeHandler { Topic = "MyTopic", Name = "MySubscriber", ServerName = "AnotherServer", LastHandshakeDateTime = DateTimeOffset.Now, QueueName = "AnotherSubscribeQueue" });
+                cut.MessageBrokerServices.Add(new Dto.MessageBrokerService { ServerName = "MyTestServer", RemoteQueueName = "LocaleMessageBrokerQueue", HandshakeDateTime = DateTimeOffset.Now });
+                cut.MessageBrokerServices.Add(new Dto.MessageBrokerService { ServerName = "AnotherServer", RemoteQueueName = "RemoteMessageBrokerQueue", HandshakeDateTime = DateTimeOffset.Now });
+                cut.SubscribeHandlers.Add(new Dto.SubscribeHandler { Topic = "MyTopic", Name = "MySubscriber", ServerName = "MyTestServer", HandshakeDateTime = DateTimeOffset.Now, QueueName = "MySubscribeQueue" });
+                cut.SubscribeHandlers.Add(new Dto.SubscribeHandler { Topic = "MyTopic", Name = "MySubscriber", ServerName = "AnotherServer", HandshakeDateTime = DateTimeOffset.Now, QueueName = "AnotherSubscribeQueue" });
 
                 HandleMessage(cut, new SubscribeHandlerErrorMessage { Name = "MySubscriber", Message = new PublishMessage { Topic = "MyTopic", Persistent = false, MessageId = "MessageId1", ErrorCount = 0 } });
             }
@@ -901,8 +901,8 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
 
             using (var cut = CreateMessageBroker())
             {
-                cut.MessageBrokerServices.Add(new Dto.MessageBrokerService { ServerName = "MyTestServer", RemoteQueueName = "LocaleMessageBrokerQueue", LastHandshakeDateTime = DateTimeOffset.Now });
-                cut.SubscribeHandlers.Add(new Dto.SubscribeHandler { Topic = "MyTopic", Name = "MySubscriber", ServerName = "MyTestServer", LastHandshakeDateTime = DateTimeOffset.Now, QueueName = "MySubscribeQueue" });
+                cut.MessageBrokerServices.Add(new Dto.MessageBrokerService { ServerName = "MyTestServer", RemoteQueueName = "LocaleMessageBrokerQueue", HandshakeDateTime = DateTimeOffset.Now });
+                cut.SubscribeHandlers.Add(new Dto.SubscribeHandler { Topic = "MyTopic", Name = "MySubscriber", ServerName = "MyTestServer", HandshakeDateTime = DateTimeOffset.Now, QueueName = "MySubscribeQueue" });
 
                 HandleMessage(cut, new SubscribeHandlerErrorMessage { Name = "MySubscriber", Message = new PublishMessage { Topic = "MyTopic", Persistent = false, MessageId = "MessageId1", ErrorCount = 0 } });
             }
@@ -927,7 +927,7 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
 
             using (var cut = CreateMessageBroker())
             {
-                cut.RequestHandlers.Add(new Dto.RequestHandler { Name = "Request", QueueName = "RequestQueue", ServerName = "MyTestServer", LastHandshakeDateTime = DateTimeOffset.Now });
+                cut.RequestHandlers.Add(new Dto.RequestHandler { Name = "Request", QueueName = "RequestQueue", ServerName = "MyTestServer", HandshakeDateTime = DateTimeOffset.Now });
 
                 HandleMessage(cut, new RequestMessage { Name = "Request", RequesterServerName = "MyTestServer" });
             }
@@ -942,8 +942,8 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
 
             using (var cut = CreateMessageBroker())
             {
-                cut.MessageBrokerServices.Add(new Dto.MessageBrokerService { ServerName = "AnotherServer", RemoteQueueName = "RemoteMessageBrokerQueue", LastHandshakeDateTime = DateTimeOffset.Now });
-                cut.RequestHandlers.Add(new Dto.RequestHandler { Name = "Request", QueueName = "RequestQueue", ServerName = "AnotherServer", LastHandshakeDateTime = DateTimeOffset.Now });
+                cut.MessageBrokerServices.Add(new Dto.MessageBrokerService { ServerName = "AnotherServer", RemoteQueueName = "RemoteMessageBrokerQueue", HandshakeDateTime = DateTimeOffset.Now });
+                cut.RequestHandlers.Add(new Dto.RequestHandler { Name = "Request", QueueName = "RequestQueue", ServerName = "AnotherServer", HandshakeDateTime = DateTimeOffset.Now });
 
                 HandleMessage(cut, new RequestMessage { Name = "Request", RequesterServerName = "MyTestServer" });
             }
@@ -958,8 +958,8 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
 
             using (var cut = CreateMessageBroker())
             {
-                cut.RequestHandlers.Add(new Dto.RequestHandler { Name = "Request", QueueName = "RequestQueueA", ServerName = "MyTestServer", LastHandshakeDateTime = DateTimeOffset.Now.AddMinutes(-5) });
-                cut.RequestHandlers.Add(new Dto.RequestHandler { Name = "Request", QueueName = "RequestQueueB", ServerName = "MyTestServer", LastHandshakeDateTime = DateTimeOffset.Now });
+                cut.RequestHandlers.Add(new Dto.RequestHandler { Name = "Request", QueueName = "RequestQueueA", ServerName = "MyTestServer", HandshakeDateTime = DateTimeOffset.Now.AddMinutes(-5) });
+                cut.RequestHandlers.Add(new Dto.RequestHandler { Name = "Request", QueueName = "RequestQueueB", ServerName = "MyTestServer", HandshakeDateTime = DateTimeOffset.Now });
 
                 HandleMessage(cut, new RequestMessage { Name = "Request", RequesterServerName = "MyTestServer" });
             }
@@ -984,7 +984,7 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
 
             using (var cut = CreateMessageBroker())
             {
-                cut.MessageBrokerServices.Add(new Dto.MessageBrokerService { ServerName = "AnotherServer", RemoteQueueName = "AnotherBrokerQueueName", Queue = null, LastHandshakeDateTime = DateTimeOffset.Now });
+                cut.MessageBrokerServices.Add(new Dto.MessageBrokerService { ServerName = "AnotherServer", RemoteQueueName = "AnotherBrokerQueueName", Queue = null, HandshakeDateTime = DateTimeOffset.Now });
                 HandleMessage(cut, new ResponseMessage { RequesterServerName = "AnotherServer", ReplyQueue = "MyReplyQueue", Body = "MyResponse" });
             }
 
