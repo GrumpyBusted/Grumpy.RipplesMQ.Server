@@ -1,6 +1,6 @@
 ﻿CREATE TABLE [dbo].[MessageState]
 (
-	[Id] INT NOT NULL PRIMARY KEY IDENTITY, 
+	[Id] INT NOT NULL PRIMARY KEY IDENTITY(1, 1), 
 	[MessageId] NVARCHAR(64) NOT NULL, 
     [SubscriberName] NVARCHAR(256) NOT NULL, 
     [State] NVARCHAR(32) NOT NULL, 

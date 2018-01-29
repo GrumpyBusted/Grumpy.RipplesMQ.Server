@@ -30,6 +30,13 @@ namespace Grumpy.RipplesMQ.Core.Interfaces
         void Handler(object message, CancellationToken cancellationToken);
 
         /// <summary>
+        /// Error message handler message
+        /// </summary>
+        /// <param name="message">The Message</param>
+        /// <param name="exception">Exception</param>
+        void ErrorHandler(object message, Exception exception);
+
+        /// <summary>
         /// List of Message Broker Services
         /// </summary>
         List<MessageBrokerService> MessageBrokerServices { get; }

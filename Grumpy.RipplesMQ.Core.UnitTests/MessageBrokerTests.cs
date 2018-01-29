@@ -5,6 +5,7 @@ using System.Threading;
 using FluentAssertions;
 using Grumpy.Common;
 using Grumpy.Common.Interfaces;
+using Grumpy.Json;
 using Grumpy.MessageQueue.Enum;
 using Grumpy.MessageQueue.Interfaces;
 using Grumpy.MessageQueue.Msmq.Exceptions;
@@ -95,7 +96,6 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
             }
 
             _messageBrokerServiceRepository.Received(0).Insert(Arg.Any<MessageBrokerService>());
-            _repositories.Received(1).Save();
         }
 
         [Fact]
@@ -181,6 +181,15 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
 
             localeQueue.Send(Arg.Is<MessageBrokerHandshakeMessage>(m => m.ServerName == "MyServerName"));
             remoteQueue.Received(1).Send(Arg.Is<MessageBrokerHandshakeMessage>(m => m.LocaleSubscribeHandlers.Count(s => s.Topic == "MyTopic") == 1));
+        }
+
+        [Fact]
+        public void CanCallErrorHandler()
+        {
+            using (var cut = CreateMessageBroker())
+            {
+                cut.ErrorHandler("Error", new Exception());
+            }
         }
 
         [Fact]
@@ -685,16 +694,28 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
         [Fact]
         public void HandlingPublishPersistentMessageShouldSaveMessageToRepository()
         {
-            HandleMessage(new PublishMessage { ReplyQueue = "MyReplyQueue", Topic = "MyTopic", Persistent = true, Body = "Message" });
+            HandleMessage(CreatePublishMessage("MyReplyQueue", "MyTopic", "Message"));
 
             _messageRepository.Received(1).Insert(Arg.Any<Message>());
             _repositories.Received(2).Save();
         }
 
+        private static PublishMessage CreatePublishMessage<T>(string replyQueue, string topic, T message, bool persistent = true)
+        {
+            return new PublishMessage
+            {
+                ReplyQueue = replyQueue, 
+                Topic = topic, 
+                Persistent = persistent, 
+                MessageBody = message.SerializeToJson(),
+                MessageType = message.GetType().FullName
+            };
+        }
+
         [Fact]
         public void HandlingPublishNonPersistentMessageShouldNotSaveMessageToRepository()
         {
-            HandleMessage(new PublishMessage { ReplyQueue = "MyReplyQueue", Topic = "MyTopic", Persistent = false, Body = "Message" });
+            HandleMessage(CreatePublishMessage("MyReplyQueue", "MyTopic", "Message", false));
 
             _messageRepository.Received(0).Insert(Arg.Any<Message>());
             _repositories.Received(0).Save();
@@ -710,7 +731,7 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
                 cut.SubscribeHandlers.Add(new Dto.SubscribeHandler { Topic = "TheirTopic", Name = "SubscriberB", HandshakeDateTime = DateTimeOffset.Now });
                 cut.SubscribeHandlers.Add(new Dto.SubscribeHandler { Topic = "MyTopic", Name = "SubscriberC", HandshakeDateTime = DateTimeOffset.Now });
 
-                HandleMessage(cut, new PublishMessage { ReplyQueue = "MyReplyQueue", Topic = "MyTopic", Persistent = true, Body = "Message" });
+                HandleMessage(cut, CreatePublishMessage("MyReplyQueue", "MyTopic", "Message"));
             }
 
             _messageStateRepository.Received(2).Insert(Arg.Is<MessageState>(m => m.SubscriberName == "SubscriberA"));
@@ -746,7 +767,7 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
             {
                 cut.SubscribeHandlers.Add(new Dto.SubscribeHandler { Topic = "MyTopic", Name = "Subscriber", ServerName = "MyTestServer", HandshakeDateTime = DateTimeOffset.Now });
 
-                HandleMessage(cut, new PublishMessage { Topic = "MyTopic", Persistent = true, Body = "Message" });
+                HandleMessage(cut, CreatePublishMessage(null, "MyTopic", "Message"));
             }
 
             _messageStateRepository.Received(1).Insert(Arg.Is<MessageState>(m => m.State == "Distributed"));
@@ -972,9 +993,20 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
         {
             var replyQueue = GetLocaleQueue("MyReplyQueue");
 
-            HandleMessage(new ResponseMessage { RequesterServerName = "MyTestServer", ReplyQueue = "MyReplyQueue", Body = "MyResponse" });
+            HandleMessage(CreateResponseMessage("MyTestServer", "MyResponse"));
 
             replyQueue.Received(1).Send(Arg.Any<ResponseMessage>());
+        }
+
+        private static ResponseMessage CreateResponseMessage<T>(string requesterServerName, T response)
+        {
+            return new ResponseMessage
+            {
+                RequesterServerName = requesterServerName, 
+                ReplyQueue = "MyReplyQueue", 
+                MessageBody = response.SerializeToJson(),
+                MessageType = response.GetType().FullName
+            };
         }
 
         [Fact]
@@ -985,7 +1017,7 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
             using (var cut = CreateMessageBroker())
             {
                 cut.MessageBrokerServices.Add(new Dto.MessageBrokerService { ServerName = "AnotherServer", RemoteQueueName = "AnotherBrokerQueueName", Queue = null, HandshakeDateTime = DateTimeOffset.Now });
-                HandleMessage(cut, new ResponseMessage { RequesterServerName = "AnotherServer", ReplyQueue = "MyReplyQueue", Body = "MyResponse" });
+                HandleMessage(cut, CreateResponseMessage("AnotherServer", "MyResponse"));
             }
 
             replyQueue.Received(1).Send(Arg.Any<ResponseMessage>());
