@@ -9,6 +9,7 @@ using Grumpy.Json;
 using Grumpy.MessageQueue.Enum;
 using Grumpy.MessageQueue.Interfaces;
 using Grumpy.MessageQueue.Msmq.Exceptions;
+using Grumpy.RipplesMQ.Core.Exceptions;
 using Grumpy.RipplesMQ.Core.Infrastructure;
 using Grumpy.RipplesMQ.Core.Interfaces;
 using Grumpy.RipplesMQ.Core.Messages;
@@ -705,9 +706,9 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
         {
             return new PublishMessage
             {
-                ReplyQueue = replyQueue, 
-                Topic = topic, 
-                Persistent = persistent, 
+                ReplyQueue = replyQueue,
+                Topic = topic,
+                Persistent = persistent,
                 MessageBody = message.SerializeToJson(),
                 MessageType = message.GetType().FullName
             };
@@ -874,16 +875,26 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
         [Fact]
         public void HandlingSubscribeHandlerErrorMessageOnPersistentMessageShouldUpdateErrorCountInRepository()
         {
-            HandleMessage(new SubscribeHandlerErrorMessage { Name = "SubscriberA", Message = new PublishMessage { Persistent = true, MessageId = "MessageId1" } });
+            using (var cut = CreateMessageBroker())
+            {
+                cut.SubscribeHandlers.Add(new Dto.SubscribeHandler { Topic = "MyTopic", Name = "SubscriberA", ServerName = "MyTestServer", HandshakeDateTime = DateTimeOffset.Now, QueueName = "MySubscribeQueue" });
 
-            _messageStateRepository.Received(1).Insert(Arg.Is<MessageState>(m => m.ErrorCount == 1 && m.SubscriberName == "SubscriberA"));
-            _repositories.Received(1).Save();
+                HandleMessage(cut, new SubscribeHandlerErrorMessage { Name = "SubscriberA", Message = new PublishMessage { Persistent = true, MessageId = "MessageId1", Topic = "MyTopic" } });
+            }
+
+            _messageStateRepository.Received(2).Insert(Arg.Is<MessageState>(m => m.ErrorCount == 1 && m.SubscriberName == "SubscriberA"));
+            _repositories.Received(2).Save();
         }
 
         [Fact]
         public void HandlingSubscribeHandlerErrorMessageOnPersistentMessageSecondTimeShouldUpdateErrorCountInRepository()
         {
-            HandleMessage(new SubscribeHandlerErrorMessage { Name = "SubscriberA", Message = new PublishMessage { Persistent = true, MessageId = "MessageId1", ErrorCount = 1 } });
+            using (var cut = CreateMessageBroker())
+            {
+                cut.SubscribeHandlers.Add(new Dto.SubscribeHandler { Topic = "MyTopic", Name = "SubscriberA", ServerName = "MyTestServer", HandshakeDateTime = DateTimeOffset.Now, QueueName = "MySubscribeQueue" });
+
+                Assert.Throws<PublishMessageException>(() => HandleMessage(cut, new SubscribeHandlerErrorMessage { Name = "SubscriberA", Message = new PublishMessage { Persistent = true, MessageId = "MessageId1", ErrorCount = 1, Topic = "MyTopic" } }));
+            }
 
             _messageStateRepository.Received(1).Insert(Arg.Is<MessageState>(m => m.ErrorCount == 2 && m.SubscriberName == "SubscriberA"));
             _repositories.Received(1).Save();
@@ -892,7 +903,12 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
         [Fact]
         public void HandlingSubscribeHandlerErrorMessageOnNonePersistentMessageShouldUpdateCompletedTimeInRepository()
         {
-            HandleMessage(new SubscribeHandlerErrorMessage { Name = "SubscriberA", Message = new PublishMessage { Persistent = false, MessageId = "MessageId1" } });
+            using (var cut = CreateMessageBroker())
+            {
+                cut.SubscribeHandlers.Add(new Dto.SubscribeHandler { Topic = "MyTopic", Name = "SubscriberA", ServerName = "MyTestServer", HandshakeDateTime = DateTimeOffset.Now, QueueName = "MySubscribeQueue" });
+
+                HandleMessage(cut, new SubscribeHandlerErrorMessage { Name = "SubscriberA", Message = new PublishMessage { Persistent = false, MessageId = "MessageId1", Topic = "MyTopic" } });
+            }
 
             _messageStateRepository.Received(0).Get(Arg.Any<string>(), Arg.Any<string>());
             _repositories.Received(0).Save();
@@ -1003,8 +1019,8 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
         {
             return new ResponseMessage
             {
-                RequesterServerName = requesterServerName, 
-                ReplyQueue = "MyReplyQueue", 
+                RequesterServerName = requesterServerName,
+                ReplyQueue = "MyReplyQueue",
                 MessageBody = response.SerializeToJson(),
                 MessageType = response.GetType().FullName
             };

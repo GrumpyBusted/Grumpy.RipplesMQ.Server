@@ -14,6 +14,7 @@ using Grumpy.MessageQueue.Interfaces;
 using Grumpy.MessageQueue.Msmq.Exceptions;
 using Grumpy.RipplesMQ.Core.Dto;
 using Grumpy.RipplesMQ.Core.Enum;
+using Grumpy.RipplesMQ.Core.Exceptions;
 using Grumpy.RipplesMQ.Core.Infrastructure;
 using Grumpy.RipplesMQ.Core.Interfaces;
 using Grumpy.RipplesMQ.Core.Messages;
@@ -89,8 +90,8 @@ namespace Grumpy.RipplesMQ.Core
 
             UpdateMessageBrokerService(_messageBrokerServiceInformation.ServerName, _messageBrokerServiceInformation.RemoteQueueName, _messageBrokerServiceInformation.Id);
 
-            _localeQueueHandler.Start(_messageBrokerServiceInformation.LocaleQueueName, true, LocaleQueueMode.DurableCreate, true, Handler, ErrorHandler, null, 1000, true, false, _cancellationToken);
-            _remoteQueueHandler.Start(_messageBrokerServiceInformation.RemoteQueueName, true, LocaleQueueMode.DurableCreate, true, Handler, ErrorHandler, null, 1000, true, false, _cancellationToken);
+            _localeQueueHandler.Start(_messageBrokerServiceInformation.LocaleQueueName, true, LocaleQueueMode.DurableCreate, true, Handler, (o, exception) => ErrorHandler(o, exception), null, 1000, true, false, _cancellationToken);
+            _remoteQueueHandler.Start(_messageBrokerServiceInformation.RemoteQueueName, true, LocaleQueueMode.DurableCreate, true, Handler, (o, exception) => ErrorHandler(o, exception), null, 1000, true, false, _cancellationToken);
 
             _handshakeTask.Start(SendMessageBrokerHandshakes, 30000, _cancellationToken);
             _repositoryCleanupTask.Start(SendRepositoryCleanupMessage, 3600000, _cancellationToken);
@@ -434,7 +435,7 @@ namespace Grumpy.RipplesMQ.Core
 
             if (subscribeHandlerState == SubscribeHandlerState.Error)
             {
-                _logger.Error("Error sending Publish message to Subscriber {@SubscribeHandler} {@Message}", subscribeHandler, message);
+                _logger.Warning("Error sending Publish message to Subscriber {@SubscribeHandler} {@Message}", subscribeHandler, message);
 
                 using (var queue = _queueFactory.CreateLocale(Shared.Config.MessageBrokerConfig.LocaleQueueName, true, LocaleQueueMode.Durable, true))
                 {
@@ -473,7 +474,7 @@ namespace Grumpy.RipplesMQ.Core
             }
             catch (Exception exception)
             {
-                _logger.Warning(exception, "Error sending message to Subscriber {@SubscribeHandler} {@Message}", subscribeHandler, message);
+                _logger.Warning(exception, "Error sending publish message {@SubscribeHandler} {@Message}", subscribeHandler, message);
 
                 return SubscribeHandlerState.Error;
             }
@@ -515,18 +516,24 @@ namespace Grumpy.RipplesMQ.Core
             if (message.Message.Persistent)
                 SaveMessageState(message.Name, message.Message.MessageId, SubscribeHandlerState.Error, message.Message.ErrorCount);
 
-            if (message.Message.ErrorCount == 1)
-            {
-                var subscribeHandler = FindSubscribeHandler(message.Name, message.Message.Topic, false);
+            if (message.Message.ErrorCount != 1)
+                throw new PublishMessageException("Error sending Message to Subscriber", message);
 
-                if (subscribeHandler != null)
-                {
-                    var subscribeHandlerState = IsLocale(subscribeHandler.ServerName) ? SendPublishMessage(subscribeHandler, message.Message) : SendPublishSubscriberMessageToRemoteMessageBroker(subscribeHandler.ServerName, CreatePublishSubscriberMessage(message.Name, message.Message));
+            var subscribeHandler = FindSubscribeHandler(message.Name, message.Message.Topic, false);
 
-                    if (message.Message.Persistent)
-                        SaveMessageState(message.Name, message.Message.MessageId, subscribeHandlerState, message.Message.ErrorCount);
-                }
-            }
+            var subscribeHandlerState = SubscribeHandlerState.Error;
+
+            if (subscribeHandler != null)
+                subscribeHandlerState = IsLocale(subscribeHandler.ServerName) ? SendPublishMessage(subscribeHandler, message.Message) : SendPublishSubscriberMessageToRemoteMessageBroker(subscribeHandler.ServerName, CreatePublishSubscriberMessage(message.Name, message.Message));
+
+            if (message.Message.Persistent)
+                SaveMessageState(message.Name, message.Message.MessageId, subscribeHandlerState, message.Message.ErrorCount);
+
+            if (subscribeHandler == null)
+                throw new PublishMessageException("No subscriber handler found", message);
+
+            if (subscribeHandlerState == SubscribeHandlerState.Error)
+                throw new PublishMessageException("Unable to send Message to Subscriber", subscribeHandler, message);
         }
 
         private void Handler(RequestMessage message)

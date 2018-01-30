@@ -58,6 +58,7 @@
     <Compile Include="Messages\RepositoryCleanupMessage.cs" />
     <Compile Include="Messages\SendMessageBrokerHandshakeMessage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Exceptions\PublishMessageException.cs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Grumpy.Common">
