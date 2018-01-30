@@ -14,6 +14,7 @@ using Grumpy.RipplesMQ.Core.Interfaces;
 using Grumpy.RipplesMQ.Core.Messages;
 using Grumpy.RipplesMQ.Entity;
 using Grumpy.RipplesMQ.Shared.Messages;
+using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 using Xunit;
 
@@ -1152,7 +1153,7 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
 
         private IMessageBroker CreateMessageBroker()
         {
-            return new MessageBroker(_messageBrokerConfig, _repositoriesFactory, _queueHandlerFactory, _queueFactory, _processInformation);
+            return new MessageBroker(NullLogger.Instance, _messageBrokerConfig, _repositoriesFactory, _queueHandlerFactory, _queueFactory, _processInformation);
         }
     }
 }

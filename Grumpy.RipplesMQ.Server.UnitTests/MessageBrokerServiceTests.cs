@@ -1,6 +1,7 @@
 ﻿using System.Threading;
 using FluentAssertions;
 using Grumpy.RipplesMQ.Core;
+using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
 namespace Grumpy.RipplesMQ.Server.UnitTests
@@ -22,12 +23,18 @@ namespace Grumpy.RipplesMQ.Server.UnitTests
         }
 
         [Fact]
+        public void CanBuildMessageBrokerWithLogger()
+        {
+            new MessageBrokerBuilder().WithLogger(NullLogger.Instance).Build();
+        }
+
+        [Fact]
         public void MessageBrokerCanStartAndStop()
         {
             var cut = new MessageBrokerBuilder().Build();
             
             cut.Start(CancellationToken.None);
-            Thread.Sleep(1000);
+            Thread.Sleep(1001);
             cut.Stop();
         }
     }
