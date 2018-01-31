@@ -97,8 +97,8 @@ namespace Grumpy.RipplesMQ.Server
                 RemoteQueueName = _remoteQueueName
             };
 
-            var queueFactory = new QueueFactory();
-            var queueHandlerFactory = new QueueHandlerFactory(queueFactory);
+            var queueFactory = new QueueFactory(_logger);
+            var queueHandlerFactory = new QueueHandlerFactory(_logger, queueFactory);
 
             return new MessageBroker(_logger, messageBrokerConfig, _repositoriesFactory, queueHandlerFactory, queueFactory, _processInformation);
         }
