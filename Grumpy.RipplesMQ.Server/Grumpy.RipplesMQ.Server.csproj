@@ -62,7 +62,7 @@
       <Version>0.9.5</Version>
     </PackageReference>
     <PackageReference Include="Grumpy.MessageQueue">
-      <Version>1.2.8</Version>
+      <Version>1.3.9</Version>
     </PackageReference>
   </ItemGroup>
   <ItemGroup>

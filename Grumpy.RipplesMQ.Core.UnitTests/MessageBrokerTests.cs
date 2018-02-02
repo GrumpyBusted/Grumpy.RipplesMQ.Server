@@ -61,7 +61,7 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
             _repositoriesFactory.Create().Returns(_repositories);
             _queueFactory = Substitute.For<IQueueFactory>();
             _messageBrokerQueue = Substitute.For<ILocaleQueue>();
-            _queueFactory.CreateLocale(Shared.Config.MessageBrokerConfig.LocaleQueueName, Arg.Any<bool>(), Arg.Any<LocaleQueueMode>(), Arg.Any<bool>()).Returns(_messageBrokerQueue);
+            _queueFactory.CreateLocale(Shared.Config.MessageBrokerConfig.LocaleQueueName, Arg.Any<bool>(), Arg.Any<LocaleQueueMode>(), Arg.Any<bool>(), Arg.Any<AccessMode>()).Returns(_messageBrokerQueue);
         }
 
         [Fact]
@@ -153,16 +153,16 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
                 Thread.Sleep(1000);
             }
 
-            _queueFactory.Received(5).CreateRemote(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<bool>(), Arg.Any<RemoteQueueMode>(), Arg.Any<bool>());
+            _queueFactory.Received(3).CreateRemote(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<bool>(), Arg.Any<RemoteQueueMode>(), Arg.Any<bool>(), Arg.Any<AccessMode>());
         }
 
         [Fact]
         public void SendingHandshakeShouldIncludeSubscriber()
         {
             var localeQueue = Substitute.For<ILocaleQueue>();
-            _queueFactory.CreateLocale("AnotherQueueName", Arg.Any<bool>(), Arg.Any<LocaleQueueMode>(), Arg.Any<bool>()).Returns(localeQueue);
+            _queueFactory.CreateLocale("AnotherQueueName", Arg.Any<bool>(), Arg.Any<LocaleQueueMode>(), Arg.Any<bool>(), Arg.Any<AccessMode>()).Returns(localeQueue);
             var remoteQueue = Substitute.For<IRemoteQueue>();
-            _queueFactory.CreateRemote("MyTestServer", "AnotherQueueName", Arg.Any<bool>(), Arg.Any<RemoteQueueMode>(), Arg.Any<bool>()).Returns(remoteQueue);
+            _queueFactory.CreateRemote("MyTestServer", "AnotherQueueName", Arg.Any<bool>(), Arg.Any<RemoteQueueMode>(), Arg.Any<bool>(), Arg.Any<AccessMode>()).Returns(remoteQueue);
 
             _messageBrokerServiceRepository.GetAll().Returns(new List<MessageBrokerService>
             {
@@ -235,7 +235,7 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
         [Fact]
         public void MessageBrokerHandshakeWhenRemoteQueueNotExistsShouldDeleteMessageBrokerService()
         {
-            _queueFactory.CreateRemote(Arg.Any<string>(), "NonExistingRemoteQueue", Arg.Any<bool>(), Arg.Any<RemoteQueueMode>(), Arg.Any<bool>()).Returns(e => throw new QueueMissingException("NonExistingRemoteQueue"));
+            _queueFactory.CreateRemote(Arg.Any<string>(), "NonExistingRemoteQueue", Arg.Any<bool>(), Arg.Any<RemoteQueueMode>(), Arg.Any<bool>(), Arg.Any<AccessMode>()).Returns(e => throw new QueueMissingException("NonExistingRemoteQueue"));
 
             using (var cut = CreateMessageBroker())
             {
@@ -327,15 +327,12 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
         public void ShouldSendCleanupServiceMessage()
         {
             var remoteQueue = Substitute.For<IRemoteQueue>();
-            _queueFactory.CreateRemote("MyTestServer", "MyRemoteQueueName", Arg.Any<bool>(), Arg.Any<RemoteQueueMode>(), Arg.Any<bool>()).Returns(remoteQueue);
 
-            _messageBrokerServiceRepository.GetAll().Returns(new List<MessageBrokerService>
-            {
-                new MessageBrokerService { ServerName = "MyTestServer", RemoteQueueName = "MyRemoteQueueName" }
-            }.AsQueryable());
+            _queueFactory.CreateRemote("MyTestServer", "MyRemoteQueueName", Arg.Any<bool>(), Arg.Any<RemoteQueueMode>(), Arg.Any<bool>(), Arg.Any<AccessMode>()).Returns(remoteQueue);
 
             using (var cut = CreateMessageBroker())
             {
+                cut.MessageBrokerServices.Add(new Dto.MessageBrokerService { ServerName = "MyTestServer", RemoteQueueName = "MyRemoteQueueName", HandshakeDateTime = DateTimeOffset.Now });
                 cut.Start(_cancellationToken);
                 Thread.Sleep(1000);
             }
@@ -485,7 +482,7 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
         public void CleanOldServicesMessageShouldDeleteRemoteQueue()
         {
             var queue = Substitute.For<ILocaleQueue>();
-            _queueFactory.CreateLocale("OldRemoteQueueName", Arg.Any<bool>(), Arg.Any<LocaleQueueMode>(), Arg.Any<bool>()).Returns(queue);
+            _queueFactory.CreateLocale("OldRemoteQueueName", Arg.Any<bool>(), Arg.Any<LocaleQueueMode>(), Arg.Any<bool>(), Arg.Any<AccessMode>()).Returns(queue);
 
             _messageBrokerServiceRepository.GetAll().Returns(new List<MessageBrokerService>
             {
@@ -518,7 +515,7 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
         public void CleanOldServicesMessageShouldDeleteSubscriberQueue()
         {
             var queue = Substitute.For<ILocaleQueue>();
-            _queueFactory.CreateLocale("OldQueueName", Arg.Any<bool>(), Arg.Any<LocaleQueueMode>(), Arg.Any<bool>()).Returns(queue);
+            _queueFactory.CreateLocale("OldQueueName", Arg.Any<bool>(), Arg.Any<LocaleQueueMode>(), Arg.Any<bool>(), Arg.Any<AccessMode>()).Returns(queue);
 
             _subscriberRepository.GetAll().Returns(new List<Subscriber>
             {
@@ -1139,7 +1136,7 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
             var queue = Substitute.For<ILocaleQueue>();
             queue.Name.Returns(queueName ?? "Unknown");
 
-            _queueFactory.CreateLocale(queueName == null ? Arg.Any<string>() : Arg.Is<string>(n => n.Contains(queueName)), Arg.Any<bool>(), Arg.Any<LocaleQueueMode>(), Arg.Any<bool>()).Returns(queue);
+            _queueFactory.CreateLocale(queueName == null ? Arg.Any<string>() : Arg.Is<string>(n => n.Contains(queueName)), Arg.Any<bool>(), Arg.Any<LocaleQueueMode>(), Arg.Any<bool>(), Arg.Any<AccessMode>()).Returns(queue);
 
             return queue;
         }
@@ -1149,7 +1146,7 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
             var queue = Substitute.For<IRemoteQueue>();
             queue.Name.Returns(queueName ?? "Unknown");
 
-            _queueFactory.CreateRemote(serverName, queueName == null ? Arg.Any<string>() : Arg.Is<string>(n => n.Contains(queueName)), Arg.Any<bool>(), Arg.Any<RemoteQueueMode>(), Arg.Any<bool>()).Returns(queue);
+            _queueFactory.CreateRemote(serverName, queueName == null ? Arg.Any<string>() : Arg.Is<string>(n => n.Contains(queueName)), Arg.Any<bool>(), Arg.Any<RemoteQueueMode>(), Arg.Any<bool>(), Arg.Any<AccessMode>()).Returns(queue);
 
             return queue;
         }
