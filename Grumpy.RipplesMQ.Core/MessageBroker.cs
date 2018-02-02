@@ -1140,8 +1140,6 @@ namespace Grumpy.RipplesMQ.Core
                 if (throwOnError)
                     throw new MessageBrokerException(serverName);
 
-                _logger.Warning("Unable to find Remote Message Service {ServerName}", serverName);
-
                 return null;
             }
 
