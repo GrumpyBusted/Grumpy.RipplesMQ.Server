@@ -770,7 +770,7 @@ namespace Grumpy.RipplesMQ.Core
             }
             catch (Exception exception)
             {
-                _logger.Warning(exception, $"Unable to delete queue {queueName}");
+                _logger.Warning(exception, "Unable to delete queue {QueueName}", queueName);
             }
         }
 
