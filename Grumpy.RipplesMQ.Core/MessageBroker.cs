@@ -74,7 +74,7 @@ namespace Grumpy.RipplesMQ.Core
             SubscribeHandlers = new List<Dto.SubscribeHandler>();
             RequestHandlers = new List<Dto.RequestHandler>();
 
-            _logger.LogInformation("RipplesMQ Message Broker Server Created {@Information}", _messageBrokerServiceInformation);
+            _logger.Information("RipplesMQ Message Broker Server Created {@Information}", _messageBrokerServiceInformation);
         }
 
         /// <inheritdoc />
@@ -97,7 +97,7 @@ namespace Grumpy.RipplesMQ.Core
             _handshakeTask.Start(SendMessageBrokerHandshakes, 30000, _cancellationToken);
             _repositoryCleanupTask.Start(SendRepositoryCleanupMessage, 3600000, _cancellationToken);
 
-            _logger.LogInformation("RipplesMQ Message Broker Server Started");
+            _logger.Information("RipplesMQ Message Broker Server Started");
         }
 
         /// <inheritdoc />
@@ -108,13 +108,13 @@ namespace Grumpy.RipplesMQ.Core
             _handshakeTask.Stop();
             _repositoryCleanupTask.Stop();
 
-            _logger.LogInformation("RipplesMQ Message Broker Server Stopped");
+            _logger.Information("RipplesMQ Message Broker Server Stopped");
         }
 
         /// <inheritdoc />
         public void Handler(object message, CancellationToken cancellationToken)
         {
-            _logger.LogDebug("Message received {MessageType} {@Message}", message.GetType().Name, message);
+            _logger.Information("Message received {MessageType} {@Message}", message.GetType().Name, message);
 
             switch (message)
             {
