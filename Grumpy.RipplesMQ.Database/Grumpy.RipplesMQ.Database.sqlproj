@@ -75,6 +75,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <PropertyGroup>
-    <PostBuildEvent>powershell -file $(SolutionDir)\PublishDacpac.ps1 -TargetPath $(TargetPath) -ProjectDir $(ProjectDir) -ProjectName $(ProjectName)</PostBuildEvent>
+    <PostBuildEvent>powershell -file $(SolutionDir)Grumpy.Entity.PublishDacpac.ps1 -TargetPath $(TargetPath) -ProjectDir $(ProjectDir) -ProjectName $(ProjectName)</PostBuildEvent>
   </PropertyGroup>
 </Project>

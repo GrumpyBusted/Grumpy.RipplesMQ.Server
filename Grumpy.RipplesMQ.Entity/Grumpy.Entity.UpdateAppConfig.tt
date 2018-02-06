@@ -1,40 +1,55 @@
-﻿<#@ template debug="false" hostspecific="true" language="C#" #>
+﻿<#@ template debug="true" hostspecific="true" language="C#" #>
 <#@ import namespace="System.Collections" #>
 <#@ output extension=".txt" #>
 <#@ include file="EF6.Utility.CS.ttinclude"#>Checking for database connection in App.config and updating
 <#
-var solutionDir = Host.ResolveAssemblyReference("$(SolutionDir)");
-var modelFile = Directory.GetFiles(solutionDir, "*.edmx", SearchOption.AllDirectories).SingleOrDefault();
 var textTransform = DynamicTextTransformation.Create(this);
 var loader = new EdmMetadataLoader(textTransform.Host, textTransform.Errors);
+var solutionDir = Host.ResolveAssemblyReference("$(SolutionDir)");
+var projectDir = Host.ResolveAssemblyReference("$(ProjectDir)");
+var modelFiles = Directory.EnumerateFiles(projectDir).Where(f => f.EndsWith(".edmx"));
+
+if (!modelFiles.Any()) 
+    return "No Entity Framework Model (.edmx) found"; 
+
+var modelFile = modelFiles.SingleOrDefault();
 
 if (modelFile == null) 
-    return "// Text Template supports one and only one .edmx (EF Model) per project."; 
+    return "This template only supports one Entity Framework Model (.edmx) file per project"; 
 
-var projectDir = Path.GetDirectoryName(modelFile);
 var modelName = Path.GetFileNameWithoutExtension(modelFile);
 var itemCollection = loader.CreateEdmItemCollection(modelFile);
 
 var container = itemCollection.OfType<EntityContainer>().FirstOrDefault();
 if (container == null)
-    return "// Entity Container not found"; 
+    return "Entity Container not found"; 
 
-var databaseLinkFile = Directory.EnumerateFiles(solutionDir).SingleOrDefault(f => f.EndsWith(".database"));
-if (databaseLinkFile == null) 
-    return "// Text Template supports one and only one .database (Database link file) per project.";  
-	
-var databaseName = Path.GetFileNameWithoutExtension(databaseLinkFile);
-var databaseServer = File.ReadLines(databaseLinkFile).FirstOrDefault();
+var databaseLinkFiles = Directory.EnumerateFiles(solutionDir, "*.entity_database", SearchOption.AllDirectories);
+if (!databaseLinkFiles.Any())
+    return "No database link file found";
 
-UpdateAppConfig($@"{projectDir}\App.config", container.Name, EntityConnectionString(databaseServer, databaseName, modelName));
+if (databaseLinkFiles.Any())
+{
+    foreach (var databaseLinkFile in databaseLinkFiles)
+    {
+        #>Database link file found <#= databaseLinkFile #>
+<#
+        var databaseName = Path.GetFileNameWithoutExtension(databaseLinkFile); 
+        var databaseServer = File.ReadLines(databaseLinkFile).FirstOrDefault();
+
+        UpdateAppConfig($@"{projectDir}\App.config", container.Name, EntityConnectionString(databaseServer, databaseName, modelName));
+    }
+}
 #>
 <#+
 private static void UpdateAppConfig(string appConfig, string connectionName, string connectionString)
 {
-    var xmlDocument = new XmlDocument();
+    var xmlDocument = new XmlDocument(); 
 
-    if (File.Exists(appConfig))
+    if (File.Exists(appConfig)) {
+        File.SetAttributes(appConfig, File.GetAttributes(appConfig) & ~FileAttributes.ReadOnly);
         xmlDocument.Load(appConfig);
+    }
     else
         CreateAppConfig(xmlDocument);
 

@@ -213,8 +213,6 @@ namespace Grumpy.RipplesMQ.Core
 
         private void SendMessageBrokerHandshakes()
         {
-            _logger.Information("Message Broker State {@MessageBrokerServices} {@SubscribeHandlers} {@RequestHandlers}", MessageBrokerServices, SubscribeHandlers, RequestHandlers);
-
             Handler(new SendMessageBrokerHandshakeMessage(), _cancellationToken);
         }
 

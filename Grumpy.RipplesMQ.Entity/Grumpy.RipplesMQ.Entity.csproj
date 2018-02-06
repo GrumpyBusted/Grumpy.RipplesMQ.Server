@@ -67,6 +67,9 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Model.edmx</DependentUpon>
     </Compile>
+    <Compile Include="Model.Entity.Context.cs">
+      <DependentUpon>Grumpy.Entity.Context.tt</DependentUpon>
+    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Subscriber.cs">
       <DependentUpon>Model.tt</DependentUpon>
@@ -80,7 +83,7 @@
       <Version>1.2.7</Version>
     </PackageReference>
     <PackageReference Include="Grumpy.Entity">
-      <Version>0.9.5</Version>
+      <Version>0.9.6</Version>
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
@@ -89,6 +92,7 @@
       <Generator>EntityModelCodeGenerator</Generator>
       <LastGenOutput>Model.Designer.cs</LastGenOutput>
     </EntityDeploy>
+    <None Include="Grumpy.Entity.PublishDacpac.ps1" />
     <None Include="Model.edmx.diagram">
       <DependentUpon>Model.edmx</DependentUpon>
     </None>

@@ -7,45 +7,54 @@
 <#@ import namespace="System.IO" #>
 <#@ output extension=".txt" #>Checking for MS SQL Project and updating PostBuildEvent
 <#
-var solutionDir = Host.ResolveAssemblyReference("$(solutionDir)");
-var sqlProject = Directory.EnumerateFiles(solutionDir, "*.sqlproj", SearchOption.AllDirectories).SingleOrDefault();
+var projectDir = Host.ResolveAssemblyReference("$(ProjectDir)");
+var solutionDir = Host.ResolveAssemblyReference("$(SolutionDir)");
+var sqlProjects = Directory.EnumerateFiles(solutionDir, "*.sqlproj", SearchOption.AllDirectories);
+var scriptName = "Grumpy.Entity.PublishDacpac.ps1";
+var scriptFile = $"{solutionDir}Grumpy.Entity.PublishDacpac.ps1";
+var postBuildEvent = $@"powershell -file $(SolutionDir){scriptName} -TargetPath $(TargetPath) -ProjectDir $(ProjectDir) -ProjectName $(ProjectName)";
 
-if (sqlProject != null)
+if (sqlProjects != null)
 {
-#>Project file found <#= sqlProject #>
+    if (sqlProjects.Any())
+	{
+        File.SetAttributes(scriptFile, File.GetAttributes(scriptFile) & ~FileAttributes.ReadOnly);
+        File.Copy($"{projectDir}{scriptName}", scriptFile, true);
+	} 
+
+    foreach (var sqlProject in sqlProjects)
+	{
+        #>Project file found <#= sqlProject #>
 <#
-    var xmlDocument = new XmlDocument();
+        var xmlDocument = new XmlDocument();
+        xmlDocument.Load(sqlProject);
+        var projectNode = GetFromPath(xmlDocument, "Project");
 
-    xmlDocument.Load(sqlProject);
-
-    var projectNode = GetFromPath(xmlDocument, "Project");
-
-    if (projectNode != null)
-    {
-        var postBuildEventNode = GetFromPath(projectNode.ChildNodes, "PropertyGroup/PostBuildEvent");
-
-        if (postBuildEventNode == null)
+        if (projectNode != null)
         {
-            var propertyGroupNode = projectNode.AppendChild(xmlDocument.CreateElement("PropertyGroup", projectNode.NamespaceURI));
+            var postBuildEventNode = GetFromPath(projectNode.ChildNodes, "PropertyGroup/PostBuildEvent");
 
-            postBuildEventNode = propertyGroupNode.AppendChild(xmlDocument.CreateElement("PostBuildEvent", projectNode.NamespaceURI));
-        }
+            if (postBuildEventNode == null)
+            {
+                var propertyGroupNode = projectNode.AppendChild(xmlDocument.CreateElement("PropertyGroup", projectNode.NamespaceURI));
 
-        const string postBuildEvent = @"powershell -file $(SolutionDir)\PublishDacpac.ps1 -TargetPath $(TargetPath) -ProjectDir $(ProjectDir) -ProjectName $(ProjectName)";
+                postBuildEventNode = propertyGroupNode.AppendChild(xmlDocument.CreateElement("PostBuildEvent", projectNode.NamespaceURI));
+            }
 
-        if (postBuildEventNode.InnerText != postBuildEvent)
-        {
+            if (postBuildEventNode.InnerText != postBuildEvent)
+            {
 #>Project updated!
 <#
-            postBuildEventNode.InnerText = postBuildEvent;
-            xmlDocument.Save(sqlProject);
-        }
-		else 
-		{
+                postBuildEventNode.InnerText = postBuildEvent;
+                xmlDocument.Save(sqlProject);
+            }
+	        else 
+		    { 
 #>Project not updated!
 <#
-		}
-    }
+		    }
+        }
+	}
 }
 
 XmlNode GetFromPath(IEnumerable xmlNodes, string path)

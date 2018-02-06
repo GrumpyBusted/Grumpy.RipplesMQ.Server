@@ -121,7 +121,7 @@ if (-not(Test-Path $HashFile -PathType Leaf)) {
     "$DatabaseName on $ServerName already up-to-date"
 }
 
-$DatabaseNameFile = "$PSScriptRoot\" + $DatabaseName + ".database"
+$DatabaseNameFile = "$ProjectDir\" + $DatabaseName + ".entity_database"
 
 if (Test-Path -Path $DatabaseNameFile) {
     Remove-Item $DatabaseNameFile -Force

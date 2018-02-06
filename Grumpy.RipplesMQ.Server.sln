@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.27130.2020
+VisualStudioVersion = 15.0.27130.2027
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{816594E8-E690-4219-9F78-EA44C740FA52}"
 	ProjectSection(SolutionItems) = preProject
@@ -29,11 +29,6 @@ EndProject
 Project("{00D1A9C2-B5F0-4AF3-8072-F6C62B433612}") = "Grumpy.RipplesMQ.Database", "Grumpy.RipplesMQ.Database\Grumpy.RipplesMQ.Database.sqlproj", "{D1349FAF-8E3C-47FA-8350-C17A81541497}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Grumpy.RipplesMQ.Entity", "Grumpy.RipplesMQ.Entity\Grumpy.RipplesMQ.Entity.csproj", "{44854D20-76E0-4A1A-AA1B-C4F47F018C5B}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Scripts", "Scripts", "{AEB89BC0-CF35-402F-87E4-B8F2FAF28226}"
-	ProjectSection(SolutionItems) = preProject
-		PublishDacpac.ps1 = PublishDacpac.ps1
-	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Grumpy.RipplesMQ.Server", "Grumpy.RipplesMQ.Server\Grumpy.RipplesMQ.Server.csproj", "{5262E610-5776-4311-A7AF-A7A3016EBCCD}"
 EndProject
