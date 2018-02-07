@@ -6,6 +6,7 @@ using Grumpy.Entity;
 using Grumpy.RipplesMQ.Core.Infrastructure;
 using Grumpy.RipplesMQ.Entity;
 using Grumpy.RipplesMQ.Infrastructure.Repositories;
+using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
 namespace Grumpy.RipplesMQ.Infrastructure.IntegrationTests
@@ -21,7 +22,7 @@ namespace Grumpy.RipplesMQ.Infrastructure.IntegrationTests
         {
             _queueName = UniqueKeyUtility.Generate();
             _entityConnectionConfig = new EntityConnectionConfig(new DatabaseConnectionConfig(@"(localdb)\MSSQLLocalDB", "Grumpy.RipplesMQ.Database_Model"));
-            _repositoriesFactory = new RepositoriesFactory(_entityConnectionConfig);
+            _repositoriesFactory = new RepositoriesFactory(NullLogger.Instance, _entityConnectionConfig);
         }
 
         [Fact]

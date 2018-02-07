@@ -1,6 +1,7 @@
 ﻿using Grumpy.Entity.Interfaces;
 using Grumpy.RipplesMQ.Core.Infrastructure;
 using Grumpy.RipplesMQ.Entity;
+using Microsoft.Extensions.Logging;
 
 namespace Grumpy.RipplesMQ.Infrastructure.Repositories
 {
@@ -11,9 +12,9 @@ namespace Grumpy.RipplesMQ.Infrastructure.Repositories
         private bool _disposed;
 
         /// <inheritdoc />
-        public Repositories(IEntityConnectionConfig entityConnectionConfig)
+        public Repositories(ILogger logger, IEntityConnectionConfig entityConnectionConfig)
         {
-            _entities = new Entities(entityConnectionConfig);
+            _entities = new Entities(logger, entityConnectionConfig);
         }
 
         /// <inheritdoc />

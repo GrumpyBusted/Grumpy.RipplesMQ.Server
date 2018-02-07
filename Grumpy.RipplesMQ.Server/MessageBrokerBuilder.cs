@@ -80,7 +80,7 @@ namespace Grumpy.RipplesMQ.Server
         public MessageBrokerBuilder WithRepository(string databaseServer, string databaseName = "RipplesMQ")
         {
             if (!databaseServer.NullOrEmpty())
-                _repositoriesFactory = new RepositoriesFactory(new EntityConnectionConfig(new DatabaseConnectionConfig(databaseServer, databaseName)));
+                _repositoriesFactory = new RepositoriesFactory(_logger, new EntityConnectionConfig(new DatabaseConnectionConfig(databaseServer, databaseName)));
 
             return this;
         }

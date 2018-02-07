@@ -18,7 +18,9 @@ if (sqlProjects != null)
 {
     if (sqlProjects.Any())
 	{
-        File.SetAttributes(scriptFile, File.GetAttributes(scriptFile) & ~FileAttributes.ReadOnly);
+	    if (File.Exists(scriptFile))
+            File.SetAttributes(scriptFile, File.GetAttributes(scriptFile) & ~FileAttributes.ReadOnly);
+
         File.Copy($"{projectDir}{scriptName}", scriptFile, true);
 	} 
 

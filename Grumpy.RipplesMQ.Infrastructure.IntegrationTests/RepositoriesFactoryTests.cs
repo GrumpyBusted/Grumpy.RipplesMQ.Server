@@ -2,6 +2,7 @@
 using Grumpy.Entity.Interfaces;
 using Grumpy.RipplesMQ.Core.Infrastructure;
 using Grumpy.RipplesMQ.Infrastructure.Repositories;
+using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 using Xunit;
 
@@ -16,7 +17,7 @@ namespace Grumpy.RipplesMQ.Infrastructure.IntegrationTests
             var config = Substitute.For<IEntityConnectionConfig>();
             config.ConnectionString(Arg.Any<string>(), Arg.Any<string>()).Returns("metadata=res://*/Model.csdl|res://*/Model.ssdl|res://*/Model.msl;provider=System.Data.SqlClient;provider connection string=\"data source=(localdb)\\MSSQLLocalDB;initial catalog=Grumpy.RipplesMQ.Database_Model;integrated security=True;MultipleActiveResultSets=True;App=EntityFramework\"\" providerName=\"System.Data.EntityClient");
 
-            _repositoriesFactory = new RepositoriesFactory(config);
+            _repositoriesFactory = new RepositoriesFactory(NullLogger.Instance, config);
         }
 
         [Fact]

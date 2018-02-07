@@ -1,23 +1,27 @@
 ﻿using Grumpy.Entity.Interfaces;
 using Grumpy.RipplesMQ.Core.Infrastructure;
+using Microsoft.Extensions.Logging;
 
 namespace Grumpy.RipplesMQ.Infrastructure.Repositories
 {
     /// <inheritdoc />
     public class RepositoriesFactory : IRepositoriesFactory
     {
-        private readonly IEntityConnectionConfig _entityConnectionConfig;
-
         /// <inheritdoc />
-        public RepositoriesFactory(IEntityConnectionConfig entityConnectionConfig)
+        public RepositoriesFactory(ILogger logger, IEntityConnectionConfig entityConnectionConfig)
         {
+            _logger = logger;
             _entityConnectionConfig = entityConnectionConfig;
         }
+
+        private readonly IEntityConnectionConfig _entityConnectionConfig;
+
+        private readonly ILogger _logger;
 
         /// <inheritdoc />
         public IRepositories Create()
         {
-            return new Repositories(_entityConnectionConfig); 
+            return new Repositories(_logger, _entityConnectionConfig); 
         }
     }
 }
