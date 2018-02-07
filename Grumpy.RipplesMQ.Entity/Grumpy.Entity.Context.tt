@@ -58,7 +58,7 @@ foreach (var modelFile in modelFiles)
         public <#=container.Name#>(ILogger logger, IEntityConnectionConfig entityConnectionConfig) : base(entityConnectionConfig.ConnectionString("<#=modelAssembly#>", "<#=modelName#>"))
         {
 		    Logger = logger;
-			Logger.Information("Creating Context for <#=container.Name#> {ConnectionString}", entityConnectionConfig.ConnectionString("<#=modelAssembly#>", "<#=modelName#>"));
+			Logger.Information("Creating Context for <#=container.Name#> {%ConnectionString}", entityConnectionConfig.ConnectionString("<#=modelAssembly#>", "<#=modelName#>"));
 
             EntityFrameworkReferenceHack();
         }

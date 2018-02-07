@@ -19,7 +19,7 @@ namespace Grumpy.RipplesMQ.Entity
         public Entities(ILogger logger, IEntityConnectionConfig entityConnectionConfig) : base(entityConnectionConfig.ConnectionString("Grumpy.RipplesMQ.Entity", "Model"))
         {
 		    Logger = logger;
-			Logger.Information("Creating Context for Entities {ConnectionString}", entityConnectionConfig.ConnectionString("Grumpy.RipplesMQ.Entity", "Model"));
+			Logger.Information("Creating Context for Entities {%ConnectionString}", entityConnectionConfig.ConnectionString("Grumpy.RipplesMQ.Entity", "Model"));
 
             EntityFrameworkReferenceHack();
         }
