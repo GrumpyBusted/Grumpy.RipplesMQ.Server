@@ -16,15 +16,7 @@ namespace Grumpy.RipplesMQ.Infrastructure.Repositories
 
         public void Insert(Subscriber subscriber)
         {
-            _entities.Subscriber.Add(new Subscriber
-            {
-                ServerName = subscriber.ServerName,
-                ServiceName = subscriber.ServiceName,
-                Name = subscriber.Name,
-                Topic = subscriber.Topic,
-                QueueName = subscriber.QueueName,
-                RegisterDateTime = subscriber.RegisterDateTime
-            });
+            _entities.Subscriber.Add(subscriber);
         }
 
         public Subscriber Get(string serverName, string queueName)

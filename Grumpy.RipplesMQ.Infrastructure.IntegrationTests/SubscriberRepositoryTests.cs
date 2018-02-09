@@ -48,7 +48,8 @@ namespace Grumpy.RipplesMQ.Infrastructure.IntegrationTests
                         Topic = "MyTopic",
                         Name = "MySubscriber",
                         RegisterDateTime = DateTimeOffset.Now,
-                        QueueName = _queueName
+                        QueueName = _queueName,
+                        MessageType = "String"
                     });
 
                     repositories.Save();

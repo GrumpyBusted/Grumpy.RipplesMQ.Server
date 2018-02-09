@@ -1040,6 +1040,7 @@ namespace Grumpy.RipplesMQ.Core
                     ServerName = serverName,
                     ServiceName = serviceName,
                     Name = message.Name,
+                    MessageType = message.MessageType,
                     Topic = message.Topic,
                     QueueName = message.QueueName,
                     RegisterDateTime = DateTimeOffset.Now,
