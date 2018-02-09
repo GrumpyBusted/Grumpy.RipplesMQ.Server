@@ -19,6 +19,11 @@ namespace Grumpy.RipplesMQ.Core.Dto
         public string Name { get; set; }
         
         /// <summary>
+        /// Message Type
+        /// </summary>
+        public string MessageType { get; set; }
+        
+        /// <summary>
         /// Server Name
         /// </summary>
         public string ServerName { get; set; }

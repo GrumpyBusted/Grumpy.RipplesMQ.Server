@@ -9,17 +9,22 @@
         /// Message Topic
         /// </summary>
         public string Topic { get; set; }
-        
+
+        /// <summary>
+        /// Message Type
+        /// </summary>
+        public string MessageType { get; set; }
+
         /// <summary>
         /// Subscribe Name
         /// </summary>
         public string Name { get; set; }
-        
+
         /// <summary>
         /// Queue Name
         /// </summary>
         public string QueueName { get; set; }
-        
+
         /// <summary>
         /// Durable Queue
         /// </summary>

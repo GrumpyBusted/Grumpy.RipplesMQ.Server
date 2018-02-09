@@ -551,90 +551,6 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
         }
 
         [Fact]
-        public void HandlingMessageBusServiceRegisterMessageShouldSendReply()
-        {
-            var replyQueue = GetLocaleQueue("MyReplyQueueName");
-
-            HandleMessage(new MessageBusServiceRegisterMessage { ReplyQueue = "MyReplyQueueName" });
-
-            replyQueue.Received(1).Send(Arg.Any<MessageBusServiceRegisterReplyMessage>());
-        }
-
-        [Fact]
-        public void HandlingSubscribeHandlerRegisterMessageShouldSendReply()
-        {
-            var replyQueue = GetLocaleQueue("MyReplyQueueName");
-
-            HandleMessage(new SubscribeHandlerRegisterMessage { Topic = "MyTopic", ReplyQueue = "MyReplyQueueName" });
-
-            replyQueue.Received(1).Send(Arg.Any<SubscribeHandlerRegisterReplyMessage>());
-        }
-
-        [Fact]
-        public void HandlingSubscribeHandlerRegisterMessageShouldAddSubscriber()
-        {
-            using (var cut = CreateMessageBroker())
-            {
-                HandleMessage(cut, new SubscribeHandlerRegisterMessage { QueueName = "MySubscribeQueue", Topic = "MyTopic" });
-                cut.SubscribeHandlers.Count.Should().Be(1);
-            }
-        }
-
-        [Fact]
-        public void HandlingSubscribeHandlerRegisterMessageShouldSaveServiceInRepository()
-        {
-            _subscriberRepository.Get(Arg.Any<string>(), Arg.Any<string>()).Returns((Subscriber)null);
-
-            HandleMessage(new SubscribeHandlerRegisterMessage { QueueName = "MySubscribeQueue", Topic = "MyTopic", Durable = true });
-
-            _subscriberRepository.Received(1).Insert(Arg.Any<Subscriber>());
-            _repositories.Received(1).Save();
-        }
-
-        [Fact]
-        public void HandlingSubscribeHandlerRegisterMessageOnExistingServiceShouldUpdateServiceInRepository()
-        {
-            _subscriberRepository.Get(Arg.Any<string>(), Arg.Any<string>()).Returns(new Subscriber());
-
-            HandleMessage(new SubscribeHandlerRegisterMessage { QueueName = "MySubscribeQueue", Topic = "MyTopic", Durable = true });
-
-            _subscriberRepository.Received(0).Insert(Arg.Any<Subscriber>());
-            _repositories.Received(1).Save();
-        }
-
-
-        [Fact]
-        public void HandlingSubscribeHandlerRegisterMessageNonDurableShouldNotSaveSubscriberInRepository()
-        {
-            _subscriberRepository.Get(Arg.Any<string>(), Arg.Any<string>()).Returns(new Subscriber());
-
-            HandleMessage(new SubscribeHandlerRegisterMessage { QueueName = "MySubscribeQueue", Topic = "MyTopic", Durable = false });
-
-            _subscriberRepository.Received(0).Insert(Arg.Any<Subscriber>());
-            _repositories.Received(0).Save();
-        }
-
-        [Fact]
-        public void HandlingRequestHandlerRegisterMessageShouldSendReply()
-        {
-            var replyQueue = GetLocaleQueue("MyReplyQueueName");
-
-            HandleMessage(new RequestHandlerRegisterMessage { Name = "MyRequest", ReplyQueue = "MyReplyQueueName" });
-
-            replyQueue.Received(1).Send(Arg.Any<RequestHandlerRegisterReplyMessage>());
-        }
-
-        [Fact]
-        public void HandlingRequestHandlerRegisterMessageShouldGetRequesterQueue()
-        {
-            using (var cut = CreateMessageBroker())
-            {
-                HandleMessage(cut, new RequestHandlerRegisterMessage { QueueName = "MyRequesterQueue", Name = "MyRequest" });
-                cut.RequestHandlers.Count.Should().Be(1);
-            }
-        }
-
-        [Fact]
         public void HandlingMessageBusServiceHandshakeMessageShouldUpdateSubscribeHandlerHandshakeDateTime()
         {
             using (var cut = CreateMessageBroker())
@@ -649,6 +565,125 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
 
                 cut.SubscribeHandlers.ElementAt(0).QueueName.Should().Be("MySubscribeQueue");
                 cut.SubscribeHandlers.ElementAt(0).HandshakeDateTime.Should().NotBeNull();
+            }
+        }
+
+        [Fact]
+        public void HandlingMessageBusServiceHandshakeMessageShouldSendReply()
+        {
+            var replyQueue = GetLocaleQueue("MyReplyQueueName");
+
+            HandleMessage(new MessageBusServiceHandshakeMessage { ReplyQueue = "MyReplyQueueName" });
+
+            replyQueue.Received(1).Send(Arg.Any<MessageBusServiceHandshakeReplyMessage>());
+        }
+
+        [Fact]
+        public void HandlingMessageBusServiceHandshakeMessageShouldAddSubscriber()
+        {
+            using (var cut = CreateMessageBroker())
+            {
+                HandleMessage(cut, new MessageBusServiceHandshakeMessage
+                {
+                    SubscribeHandlers = new List<SubscribeHandler>
+                    {
+                        new SubscribeHandler
+                        {
+                            QueueName = "MySubscribeQueue",
+                            Topic = "MyTopic"
+                        }
+                    }
+                });
+
+                cut.SubscribeHandlers.Count.Should().Be(1);
+            }
+        }
+
+        [Fact]
+        public void HandlingMessageBusServiceHandshakeMessageShouldSaveServiceInRepository()
+        {
+            _subscriberRepository.Get(Arg.Any<string>(), Arg.Any<string>()).Returns((Subscriber)null);
+
+            HandleMessage(new MessageBusServiceHandshakeMessage
+            {
+                SubscribeHandlers = new List<SubscribeHandler>
+                {
+                    new SubscribeHandler
+                    {
+                        QueueName = "MySubscribeQueue",
+                        Topic = "MyTopic",
+                        Durable = true
+                    }
+                }
+            });
+
+            _subscriberRepository.Received(1).Insert(Arg.Any<Subscriber>());
+            _repositories.Received(1).Save();
+        }
+
+
+        [Fact]
+        public void HandlingMessageBusServiceHandshakeMessageOnExistingServiceShouldUpdateServiceInRepository()
+        {
+            _subscriberRepository.Get(Arg.Any<string>(), Arg.Any<string>()).Returns(new Subscriber());
+
+            HandleMessage(new MessageBusServiceHandshakeMessage
+            {
+                SubscribeHandlers = new List<SubscribeHandler>
+                {
+                    new SubscribeHandler
+                    {
+                        QueueName = "MySubscribeQueue",
+                        Topic = "MyTopic",
+                        Durable = true
+                    }
+                }
+            });
+
+            _subscriberRepository.Received(0).Insert(Arg.Any<Subscriber>());
+            _repositories.Received(1).Save();
+        }
+
+        [Fact]
+        public void HandlingMessageBusServiceHandshakeMessageNonDurableShouldNotSaveSubscriberInRepository()
+        {
+            _subscriberRepository.Get(Arg.Any<string>(), Arg.Any<string>()).Returns(new Subscriber());
+
+            HandleMessage(new MessageBusServiceHandshakeMessage
+            {
+                SubscribeHandlers = new List<SubscribeHandler>
+                {
+                    new SubscribeHandler
+                    {
+                        QueueName = "MySubscribeQueue",
+                        Topic = "MyTopic",
+                        Durable = false
+                    }
+                }
+            });
+
+            _subscriberRepository.Received(0).Insert(Arg.Any<Subscriber>());
+            _repositories.Received(0).Save();
+        }
+
+        [Fact]
+        public void HandlingMessageBusServiceHandshakeMessageShouldGetRequesterQueue()
+        {
+            using (var cut = CreateMessageBroker())
+            {
+                HandleMessage(cut, new MessageBusServiceHandshakeMessage
+                {
+                    RequestHandlers = new List<RequestHandler>
+                    {
+                        new RequestHandler
+                        {
+                            QueueName = "MyRequesterQueue",
+                            Name = "MyRequest"
+                        }
+                    }
+                });
+
+                cut.RequestHandlers.Count.Should().Be(1);
             }
         }
 
@@ -691,6 +726,98 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
         }
 
         [Fact]
+        public void HandlingMessageBusServiceHandshakeMessageWithChangesInSubscriberShouldSendMessageBrokerHandshake()
+        {
+            var remoteMessageBrokerQueue = GetRemoteQueue("AnotherServer", "RemoteMessageBrokerQueue");
+
+            using (var cut = CreateMessageBroker())
+            {
+                cut.SubscribeHandlers.Add(new Dto.SubscribeHandler { ServerName = "MyTestServer", QueueName = "MyQueueName", Durable = true });
+                cut.MessageBrokerServices.Add(new Dto.MessageBrokerService { ServerName = "AnotherServer", RemoteQueueName = "RemoteMessageBrokerQueue", HandshakeDateTime = DateTimeOffset.Now });
+
+                HandleMessage(cut, new MessageBusServiceHandshakeMessage
+                {
+                    ServerName = "MyTestServer",
+                    SubscribeHandlers = new List<SubscribeHandler>
+                    {
+                        new SubscribeHandler { QueueName = "MyQueueName", Durable = false }
+                    }
+                });
+            }
+
+            remoteMessageBrokerQueue.Received(1).Send(Arg.Any<MessageBrokerHandshakeMessage>());
+        }
+
+        [Fact]
+        public void HandlingMessageBusServiceHandshakeMessageWithoutChangesInSubscriberShouldNotSendMessageBrokerHandshake()
+        {
+            var remoteMessageBrokerQueue = GetRemoteQueue("AnotherServer", "RemoteMessageBrokerQueue");
+
+            using (var cut = CreateMessageBroker())
+            {
+                cut.SubscribeHandlers.Add(new Dto.SubscribeHandler { ServerName = "MyTestServer", QueueName = "MyQueueName", Durable = false });
+                cut.MessageBrokerServices.Add(new Dto.MessageBrokerService { ServerName = "AnotherServer", RemoteQueueName = "RemoteMessageBrokerQueue", HandshakeDateTime = DateTimeOffset.Now });
+
+                HandleMessage(cut, new MessageBusServiceHandshakeMessage
+                {
+                    ServerName = "MyTestServer",
+                    SubscribeHandlers = new List<SubscribeHandler>
+                    {
+                        new SubscribeHandler { QueueName = "MyQueueName", Durable = false }
+                    }
+                });
+            }
+
+            remoteMessageBrokerQueue.Received(0).Send(Arg.Any<MessageBrokerHandshakeMessage>());
+        }
+
+        [Fact]
+        public void HandlingMessageBusServiceHandshakeMessageWithChangesInRequesterShouldSendMessageBrokerHandshake()
+        {
+            var remoteMessageBrokerQueue = GetRemoteQueue("AnotherServer", "RemoteMessageBrokerQueue");
+
+            using (var cut = CreateMessageBroker())
+            {
+                cut.RequestHandlers.Add(new Dto.RequestHandler { ServerName = "MyTestServer", QueueName = "MyQueueName", Name = "MyRequestHandler" });
+                cut.MessageBrokerServices.Add(new Dto.MessageBrokerService { ServerName = "AnotherServer", RemoteQueueName = "RemoteMessageBrokerQueue", HandshakeDateTime = DateTimeOffset.Now });
+
+                HandleMessage(cut, new MessageBusServiceHandshakeMessage
+                {
+                    ServerName = "MyTestServer",
+                    RequestHandlers = new List<RequestHandler>
+                    {
+                        new RequestHandler { QueueName = "MyQueueName", Name = "MyOtherRequestHandler" }
+                    }
+                });
+            }
+
+            remoteMessageBrokerQueue.Received(1).Send(Arg.Any<MessageBrokerHandshakeMessage>());
+        }
+
+        [Fact]
+        public void HandlingMessageBusServiceHandshakeMessageWithoutChangesInRequesterShouldNotSendMessageBrokerHandshake()
+        {
+            var remoteMessageBrokerQueue = GetRemoteQueue("AnotherServer", "RemoteMessageBrokerQueue");
+
+            using (var cut = CreateMessageBroker())
+            {
+                cut.RequestHandlers.Add(new Dto.RequestHandler { ServerName = "MyTestServer", QueueName = "MyQueueName", Name = "MyRequestHandler" });
+                cut.MessageBrokerServices.Add(new Dto.MessageBrokerService { ServerName = "AnotherServer", RemoteQueueName = "RemoteMessageBrokerQueue", HandshakeDateTime = DateTimeOffset.Now });
+
+                HandleMessage(cut, new MessageBusServiceHandshakeMessage
+                {
+                    ServerName = "MyTestServer",
+                    RequestHandlers = new List<RequestHandler>
+                    {
+                        new RequestHandler { QueueName = "MyQueueName", Name = "MyRequestHandler" }
+                    }
+                });
+            }
+
+            remoteMessageBrokerQueue.Received(0).Send(Arg.Any<MessageBrokerHandshakeMessage>());
+        }
+
+        [Fact]
         public void HandlingPublishPersistentMessageShouldSaveMessageToRepository()
         {
             HandleMessage(CreatePublishMessage("MyReplyQueue", "MyTopic", "Message"));
@@ -725,10 +852,10 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
         {
             using (var cut = CreateMessageBroker())
             {
-                cut.SubscribeHandlers.Add(new Dto.SubscribeHandler { Topic = "MyTopic", Name = "SubscriberA", HandshakeDateTime = DateTimeOffset.Now });
-                cut.SubscribeHandlers.Add(new Dto.SubscribeHandler { Topic = "MyTopic", Name = "SubscriberA", HandshakeDateTime = DateTimeOffset.Now });
-                cut.SubscribeHandlers.Add(new Dto.SubscribeHandler { Topic = "TheirTopic", Name = "SubscriberB", HandshakeDateTime = DateTimeOffset.Now });
-                cut.SubscribeHandlers.Add(new Dto.SubscribeHandler { Topic = "MyTopic", Name = "SubscriberC", HandshakeDateTime = DateTimeOffset.Now });
+                cut.SubscribeHandlers.Add(new Dto.SubscribeHandler { Topic = "MyTopic", Name = "SubscriberA", HandshakeDateTime = DateTimeOffset.Now, MessageType = typeof(string).FullName });
+                cut.SubscribeHandlers.Add(new Dto.SubscribeHandler { Topic = "MyTopic", Name = "SubscriberA", HandshakeDateTime = DateTimeOffset.Now, MessageType = typeof(string).FullName });
+                cut.SubscribeHandlers.Add(new Dto.SubscribeHandler { Topic = "TheirTopic", Name = "SubscriberB", HandshakeDateTime = DateTimeOffset.Now, MessageType = typeof(string).FullName });
+                cut.SubscribeHandlers.Add(new Dto.SubscribeHandler { Topic = "MyTopic", Name = "SubscriberC", HandshakeDateTime = DateTimeOffset.Now, MessageType = typeof(string).FullName });
 
                 HandleMessage(cut, CreatePublishMessage("MyReplyQueue", "MyTopic", "Message"));
             }
@@ -764,7 +891,7 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
         {
             using (var cut = CreateMessageBroker())
             {
-                cut.SubscribeHandlers.Add(new Dto.SubscribeHandler { Topic = "MyTopic", Name = "Subscriber", ServerName = "MyTestServer", HandshakeDateTime = DateTimeOffset.Now });
+                cut.SubscribeHandlers.Add(new Dto.SubscribeHandler { Topic = "MyTopic", Name = "Subscriber", ServerName = "MyTestServer", HandshakeDateTime = DateTimeOffset.Now, MessageType = typeof(string).FullName });
 
                 HandleMessage(cut, CreatePublishMessage(null, "MyTopic", "Message"));
             }
@@ -837,6 +964,20 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
         [Fact]
         public void HandlingPublishMessageToRemoteHandlerShouldSendToRemoteMessageBroker()
         {
+            using (var cut = CreateMessageBroker())
+            {
+                cut.MessageBrokerServices.Add(new Dto.MessageBrokerService { ServerName = "AnotherServer", RemoteQueueName = "RemoteMessageBrokerQueue", HandshakeDateTime = DateTimeOffset.Now });
+                cut.SubscribeHandlers.Add(new Dto.SubscribeHandler { Topic = "MyTopic", Name = "MySubscriber", ServerName = "AnotherServer", HandshakeDateTime = DateTimeOffset.Now, QueueName = "AnotherSubscribeQueue" });
+
+                HandleMessage(cut, new PublishMessage { Topic = "MyTopic" });
+            }
+
+            _messageBrokerQueue.Received(1).Send(Arg.Any<PublishSubscriberMessage>());
+        }
+
+        [Fact]
+        public void HandlingPublishSubscriberMessageToRemoteHandlerShouldSendToRemoteMessageBroker()
+        {
             var remoteMessageBrokerQueue = GetRemoteQueue("AnotherServer", "RemoteMessageBrokerQueue");
 
             using (var cut = CreateMessageBroker())
@@ -844,7 +985,6 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
                 cut.MessageBrokerServices.Add(new Dto.MessageBrokerService { ServerName = "AnotherServer", RemoteQueueName = "RemoteMessageBrokerQueue", HandshakeDateTime = DateTimeOffset.Now });
                 cut.SubscribeHandlers.Add(new Dto.SubscribeHandler { Topic = "MyTopic", Name = "MySubscriber", ServerName = "AnotherServer", HandshakeDateTime = DateTimeOffset.Now, QueueName = "AnotherSubscribeQueue" });
 
-                HandleMessage(cut, new PublishMessage { Topic = "MyTopic" });
                 HandleMessage(cut, new PublishSubscriberMessage { SubscriberName = "MySubscriber", Message = new PublishMessage { Topic = "MyTopic" } });
             }
 

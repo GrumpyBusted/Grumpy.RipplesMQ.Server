@@ -32,5 +32,15 @@ namespace Grumpy.RipplesMQ.Core.Dto
         /// Queue
         /// </summary>
         public IQueue Queue { get; set; }
+
+        /// <summary>
+        /// Request Message Type
+        /// </summary>
+        public string RequestType { get; set; }
+ 
+        /// <summary>
+        /// Response Message Type
+        /// </summary>
+        public string ResponseType { get; set; }
     }
 }

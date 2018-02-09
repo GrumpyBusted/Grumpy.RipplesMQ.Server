@@ -11,6 +11,16 @@
         public string Name { get; set; }
         
         /// <summary>
+        /// Message Type
+        /// </summary>
+        public string RequestType { get; set; }
+
+        /// <summary>
+        /// Message Type
+        /// </summary>
+        public string ResponseType { get; set; }
+
+        /// <summary>
         /// Queue name
         /// </summary>
         public string QueueName { get; set; }

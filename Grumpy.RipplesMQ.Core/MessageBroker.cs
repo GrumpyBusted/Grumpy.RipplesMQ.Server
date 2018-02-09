@@ -23,7 +23,6 @@ using Grumpy.RipplesMQ.Shared.Exceptions;
 using Grumpy.RipplesMQ.Shared.Messages;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using MessageBrokerService = Grumpy.RipplesMQ.Core.Dto.MessageBrokerService;
 
 namespace Grumpy.RipplesMQ.Core
 {
@@ -42,7 +41,7 @@ namespace Grumpy.RipplesMQ.Core
         private bool _disposed;
 
         /// <inheritdoc />
-        public List<MessageBrokerService> MessageBrokerServices { get; }
+        public List<Dto.MessageBrokerService> MessageBrokerServices { get; }
 
         /// <inheritdoc />
         public List<Dto.SubscribeHandler> SubscribeHandlers { get; }
@@ -70,7 +69,7 @@ namespace Grumpy.RipplesMQ.Core
                 RemoteQueueName = messageBrokerConfig.RemoteQueueName
             };
 
-            MessageBrokerServices = new List<MessageBrokerService>();
+            MessageBrokerServices = new List<Dto.MessageBrokerService>();
             SubscribeHandlers = new List<Dto.SubscribeHandler>();
             RequestHandlers = new List<Dto.RequestHandler>();
 
@@ -118,15 +117,6 @@ namespace Grumpy.RipplesMQ.Core
 
             switch (message)
             {
-                case MessageBusServiceRegisterMessage messageBusServiceRegisterMessage:
-                    Handler(messageBusServiceRegisterMessage);
-                    break;
-                case SubscribeHandlerRegisterMessage subscribeHandlerRegisterMessage:
-                    Handler(subscribeHandlerRegisterMessage);
-                    break;
-                case RequestHandlerRegisterMessage requestHandlerRegisterMessage:
-                    Handler(requestHandlerRegisterMessage);
-                    break;
                 case MessageBusServiceHandshakeMessage messageBusServiceHandshakeMessage:
                     Handler(messageBusServiceHandshakeMessage);
                     break;
@@ -213,6 +203,8 @@ namespace Grumpy.RipplesMQ.Core
 
         private void SendMessageBrokerHandshakes()
         {
+            _logger.Debug("Message Broker State {@MessageBrokerServices} {@SubscriberHandlers} {@RequestHandlers}", MessageBrokerServices, SubscribeHandlers, RequestHandlers);
+
             Handler(new SendMessageBrokerHandshakeMessage(), _cancellationToken);
         }
 
@@ -240,90 +232,59 @@ namespace Grumpy.RipplesMQ.Core
                 _logger.Debug("Another Message Broker is mediating the repository cleanup {MyId} {MediatorId}", _messageBrokerServiceInformation.Id, max);
         }
 
-        private void Handler(MessageBusServiceRegisterMessage message)
-        {
-            SendReply(message.ReplyQueue, CreateMessageBusServiceRegisterReplyMessage(message.RegisterDateTime), false);
-        }
-
-        private MessageBusServiceRegisterReplyMessage CreateMessageBusServiceRegisterReplyMessage(DateTimeOffset registerDateTime)
-        {
-            return new MessageBusServiceRegisterReplyMessage
-            {
-                MessageBrokerServerName = _messageBrokerServiceInformation.ServerName,
-                MessageBrokerServiceName = _messageBrokerServiceInformation.ServiceName,
-                RegisterDateTime = registerDateTime,
-                ReplyDateTime = DateTimeOffset.Now,
-                CompletedDateTime = null
-            };
-        }
-
-        private void Handler(SubscribeHandlerRegisterMessage message)
-        {
-            if (message.Durable)
-                SaveSubscriber(message);
-
-            SendReply(message.ReplyQueue, CreateSubscribeHandlerRegisterReplyMessage(message.RegisterDateTime), false);
-
-            UpdateSubscribeHandler(message);
-        }
-
-        private SubscribeHandlerRegisterReplyMessage CreateSubscribeHandlerRegisterReplyMessage(DateTimeOffset registerDateTime)
-        {
-            return new SubscribeHandlerRegisterReplyMessage
-            {
-                MessageBrokerServerName = _messageBrokerServiceInformation.ServerName,
-                MessageBrokerServiceName = _messageBrokerServiceInformation.ServiceName,
-                RegisterDateTime = registerDateTime,
-                ReplyDateTime = DateTimeOffset.Now,
-                CompletedDateTime = null
-            };
-        }
-
-        private void Handler(RequestHandlerRegisterMessage message)
-        {
-            SendReply(message.ReplyQueue, CreateRequestHandlerRegisterReplyMessage(message.RegisterDateTime), false);
-
-            UpdateRequestHandler(message);
-        }
-
-        private RequestHandlerRegisterReplyMessage CreateRequestHandlerRegisterReplyMessage(DateTimeOffset registerDateTime)
-        {
-            return new RequestHandlerRegisterReplyMessage
-            {
-                MessageBrokerServerName = _messageBrokerServiceInformation.ServerName,
-                MessageBrokerServiceName = _messageBrokerServiceInformation.ServiceName,
-                RegisterDateTime = registerDateTime,
-                ReplyDateTime = DateTimeOffset.Now,
-                CompletedDateTime = null
-            };
-        }
-
         private void Handler(MessageBusServiceHandshakeMessage message)
         {
-            foreach (var subscribeHandler in message.SubscribeHandlers ?? Enumerable.Empty<Shared.Messages.SubscribeHandler>())
-            {
-                UpdateSubscribeHandler(message.ServerName, subscribeHandler.Topic, subscribeHandler.Name, subscribeHandler.QueueName, subscribeHandler.Durable, DateTimeOffset.Now);
+            var changed = false;
+            var save = false;
 
-                if (subscribeHandler.Durable)
-                    UpdateSubscribePulse(message.ServerName, subscribeHandler.QueueName);
+            using (var repositories = _repositoriesFactory.Create())
+            {
+                foreach (var subscribeHandler in message.SubscribeHandlers ?? Enumerable.Empty<Shared.Messages.SubscribeHandler>())
+                {
+                    changed |= UpdateSubscribeHandler(message.ServerName, subscribeHandler.Topic, subscribeHandler.MessageType, subscribeHandler.Name, subscribeHandler.QueueName, subscribeHandler.Durable, DateTimeOffset.Now);
+
+                    if (subscribeHandler.Durable)
+                    {
+                        save = true;
+
+                        SaveSubscriber(repositories, message.ServerName, message.ServiceName, subscribeHandler);
+                    }
+                }
+
+                if (save)
+                    repositories.Save();
             }
 
-            foreach (var requestHandler in message.RequestHandlers ?? Enumerable.Empty<Shared.Messages.RequestHandler>())
+            changed = (message.RequestHandlers ?? Enumerable.Empty<Shared.Messages.RequestHandler>()).Aggregate(changed, (current, requestHandler) => current | UpdateRequestHandler(message.ServerName, requestHandler.Name, requestHandler.RequestType, requestHandler.ResponseType, requestHandler.QueueName, DateTimeOffset.Now));
+
+            SendReply(message.ReplyQueue, CreateMessageBusServiceHandshakeReplyMessage(message), false);
+
+            if (changed)
+                SendMessageBrokerHandshakes();
+        }
+
+        private MessageBusServiceHandshakeReplyMessage CreateMessageBusServiceHandshakeReplyMessage(MessageBusServiceHandshakeMessage message)
+        {
+            return new MessageBusServiceHandshakeReplyMessage
             {
-                UpdateRequestHandler(message.ServerName, requestHandler.Name, requestHandler.QueueName, DateTimeOffset.Now);
-            }
+                MessageBrokerServerName = _messageBrokerServiceInformation.ServerName,
+                MessageBrokerServiceName = _messageBrokerServiceInformation.ServiceName,
+                SendDateTime = message.SendDateTime,
+                ReplyDateTime = DateTimeOffset.Now,
+                CompletedDateTime = null
+            };
         }
 
         private void Handler(PublishMessage message)
         {
-            var subscribeNames = GetSubscriberNames(message.Topic);
+            var subscribeNames = GetSubscriberNames(message.Topic, message.MessageType);
 
             if (!subscribeNames.Any())
-                _logger.Information("No Subscribers found for Topic {@Message}", message);
+                _logger.Error("No Subscribers found for Topic {@Message}", message);
 
             if (message.Persistent)
                 SavePersistentMessage(message, subscribeNames);
-            
+
             using (var queue = _queueFactory.CreateLocale(_messageBrokerServiceInformation.LocaleQueueName, true, LocaleQueueMode.Durable, true, AccessMode.Send))
             {
                 if (message.Persistent)
@@ -355,11 +316,11 @@ namespace Grumpy.RipplesMQ.Core
                 SendReply(message.ReplyQueue, CreatePublishReplyMessage(message), false);
         }
 
-        private List<string> GetSubscriberNames(string topic)
+        private List<string> GetSubscriberNames(string topic, string messageType)
         {
             lock (SubscribeHandlers)
             {
-                return SubscribeHandlers.Where(s => s.Topic == topic).Select(n => n.Name).Distinct().ToList();
+                return SubscribeHandlers.Where(s => s.Topic == topic && s.MessageType == messageType).Select(n => n.Name).Distinct().ToList();
             }
         }
 
@@ -429,7 +390,12 @@ namespace Grumpy.RipplesMQ.Core
             var subscribeHandlerState = SubscribeHandlerState.Error;
 
             if (subscribeHandler != null)
-                subscribeHandlerState = IsLocale(subscribeHandler.ServerName) ? SendPublishMessage(subscribeHandler, message.Message) : SendPublishSubscriberMessageToRemoteMessageBroker(subscribeHandler.ServerName, message);
+            {
+                if (subscribeHandler.MessageType == message.Message?.MessageType)
+                    subscribeHandlerState = IsLocale(subscribeHandler.ServerName) ? SendPublishMessage(subscribeHandler, message.Message) : SendPublishSubscriberMessageToRemoteMessageBroker(subscribeHandler.ServerName, message);
+                else
+                    _logger.Error("Error Message Type do not match the message type handled by subscriber {@SubscribeHandler} {@Message}", subscribeHandler, message);
+            }
 
             if (message.Message.Persistent)
                 SaveMessageState(message.SubscriberName, message.Message.MessageId, subscribeHandlerState, message.Message.ErrorCount);
@@ -553,10 +519,14 @@ namespace Grumpy.RipplesMQ.Core
                     queue = RemoteMessageBrokerQueue(requestHandler.ServerName, false);
             }
 
-            if (queue != null)
-                queue.Send(message);
-            else
+            if (requestHandler?.ResponseType != message.ResponseType)
+                SendResponse(message.RequesterServerName, message.ReplyQueue, CreateResponseErrorMessage(message, new InvalidMessageTypeException("RequestMessage", requestHandler?.RequestType, message.RequestType)));
+            if (requestHandler?.ResponseType != message.ResponseType)
+                SendResponse(message.RequesterServerName, message.ReplyQueue, CreateResponseErrorMessage(message, new InvalidMessageTypeException("ResponseMessage", requestHandler?.ResponseType, message.ResponseType)));
+            else if (queue == null)
                 SendResponse(message.RequesterServerName, message.ReplyQueue, CreateResponseErrorMessage(message, new RequestHandlerNotFoundException(message.Name)));
+            else
+                queue.Send(message);
         }
 
         private ResponseErrorMessage CreateResponseErrorMessage(RequestMessage message, Exception exception)
@@ -653,20 +623,20 @@ namespace Grumpy.RipplesMQ.Core
 
             lock (RequestHandlers)
             {
-                messageBrokerHandshakeMessage.LocaleRequestHandlers = RequestHandlers.Where(r => IsLocale(r.ServerName)).Select(s => new LocaleRequestHandler { Name = s.Name, QueueName = s.QueueName }).ToList();
+                messageBrokerHandshakeMessage.LocaleRequestHandlers = RequestHandlers.Where(r => IsLocale(r.ServerName)).Select(s => new LocaleRequestHandler { Name = s.Name, RequestType = s.RequestType, ResponseType = s.ResponseType, QueueName = s.QueueName }).ToList();
             }
 
             lock (SubscribeHandlers)
             {
-                messageBrokerHandshakeMessage.LocaleSubscribeHandlers = SubscribeHandlers.Where(r => IsLocale(r.ServerName)).Select(s => new LocaleSubscribeHandler { Name = s.Name, QueueName = s.QueueName, Topic = s.Topic, Durable = s.Durable }).ToList();
+                messageBrokerHandshakeMessage.LocaleSubscribeHandlers = SubscribeHandlers.Where(r => IsLocale(r.ServerName)).Select(s => new LocaleSubscribeHandler { Name = s.Name, QueueName = s.QueueName, Topic = s.Topic, Durable = s.Durable, MessageType = s.MessageType }).ToList();
             }
 
             return messageBrokerHandshakeMessage;
         }
 
-        private IEnumerable<MessageBrokerService> GetMessageBrokerServices()
+        private IEnumerable<Dto.MessageBrokerService> GetMessageBrokerServices()
         {
-            ICollection<MessageBrokerService> messageBrokerServices;
+            ICollection<Dto.MessageBrokerService> messageBrokerServices;
 
             lock (MessageBrokerServices)
             {
@@ -676,7 +646,7 @@ namespace Grumpy.RipplesMQ.Core
             return messageBrokerServices;
         }
 
-        private void SendMessageBrokerHandshakeMessage(MessageBrokerService messageBrokerService, MessageBrokerHandshakeMessage messageBrokerHandshakeMessage)
+        private void SendMessageBrokerHandshakeMessage(Dto.MessageBrokerService messageBrokerService, MessageBrokerHandshakeMessage messageBrokerHandshakeMessage)
         {
             try
             {
@@ -708,12 +678,12 @@ namespace Grumpy.RipplesMQ.Core
 
             foreach (var remoteSubscribeHandler in message.LocaleSubscribeHandlers ?? Enumerable.Empty<LocaleSubscribeHandler>())
             {
-                UpdateSubscribeHandler(message.ServerName, remoteSubscribeHandler.Topic, remoteSubscribeHandler.Name, remoteSubscribeHandler.QueueName, remoteSubscribeHandler.Durable, DateTimeOffset.Now);
+                UpdateSubscribeHandler(message.ServerName, remoteSubscribeHandler.Topic, remoteSubscribeHandler.MessageType, remoteSubscribeHandler.Name, remoteSubscribeHandler.QueueName, remoteSubscribeHandler.Durable, DateTimeOffset.Now);
             }
 
             foreach (var remoteRequestHandler in message.LocaleRequestHandlers ?? Enumerable.Empty<LocaleRequestHandler>())
             {
-                UpdateRequestHandler(message.ServerName, remoteRequestHandler.Name, remoteRequestHandler.QueueName, DateTimeOffset.Now);
+                UpdateRequestHandler(message.ServerName, remoteRequestHandler.Name, remoteRequestHandler.RequestType, remoteRequestHandler.ResponseType, remoteRequestHandler.QueueName, DateTimeOffset.Now);
             }
         }
 
@@ -822,23 +792,6 @@ namespace Grumpy.RipplesMQ.Core
             }
         }
 
-        private void UpdateSubscribePulse(string serverName, string queueName)
-        {
-            using (var repositories = _repositoriesFactory.Create())
-            {
-                var subscriberRepository = repositories.SubscriberRepository();
-
-                var subscriber = subscriberRepository.Get(serverName, queueName);
-
-                if (subscriber != null)
-                {
-                    subscriber.PulseDateTime = DateTimeOffset.Now;
-
-                    repositories.Save();
-                }
-            }
-        }
-
         private void LoadMessageBrokers(IRepositories repositories)
         {
             var messageBrokerServices = repositories.MessageBrokerServiceRepository().GetAll().ToList();
@@ -870,7 +823,7 @@ namespace Grumpy.RipplesMQ.Core
 
                 if (messageBrokerService == null)
                 {
-                    MessageBrokerServices.Add(new MessageBrokerService
+                    MessageBrokerServices.Add(new Dto.MessageBrokerService
                     {
                         Id = id,
                         ServerName = serverName,
@@ -890,15 +843,10 @@ namespace Grumpy.RipplesMQ.Core
 
         private void UpdateSubscribeHandler(Subscriber subscriber)
         {
-            UpdateSubscribeHandler(subscriber.ServerName, subscriber.Topic, subscriber.Name, subscriber.QueueName, true, DateTimeOffset.Now);
+            UpdateSubscribeHandler(subscriber.ServerName, subscriber.Topic, subscriber.MessageType, subscriber.Name, subscriber.QueueName, true, DateTimeOffset.Now);
         }
 
-        private void UpdateSubscribeHandler(SubscribeHandlerRegisterMessage message)
-        {
-            UpdateSubscribeHandler(message.ServerName, message.Topic, message.Name, message.QueueName, message.Durable, DateTimeOffset.Now);
-        }
-
-        private void UpdateSubscribeHandler(string serverName, string topic, string name, string queueName, bool durable, DateTimeOffset? handshakeDateTime = null, IQueue queue = null)
+        private bool UpdateSubscribeHandler(string serverName, string topic, string messageType, string name, string queueName, bool durable, DateTimeOffset handshakeDateTime)
         {
             lock (SubscribeHandlers)
             {
@@ -906,33 +854,39 @@ namespace Grumpy.RipplesMQ.Core
 
                 if (subscribeHandler == null)
                 {
-                    SubscribeHandlers.Add(new Dto.SubscribeHandler
+                    subscribeHandler = new Dto.SubscribeHandler
                     {
                         ServerName = serverName,
                         Topic = topic,
+                        MessageType = messageType,
                         Name = name,
                         QueueName = queueName,
                         Durable = durable,
                         HandshakeDateTime = handshakeDateTime,
-                        Queue = queue
-                    });
+                        Queue = null
+                    };
+
+                    SubscribeHandlers.Add(subscribeHandler);
+
+                    return true;
                 }
-                else
-                {
-                    subscribeHandler.Topic = topic ?? subscribeHandler.Topic;
-                    subscribeHandler.Name = name ?? subscribeHandler.Name;
-                    subscribeHandler.HandshakeDateTime = handshakeDateTime ?? subscribeHandler.HandshakeDateTime;
-                    subscribeHandler.Queue = queue ?? subscribeHandler.Queue;
-                }
+
+                var before = subscribeHandler.SerializeToJson();
+
+                subscribeHandler.Topic = topic ?? subscribeHandler.Topic;
+                subscribeHandler.Name = name ?? subscribeHandler.Name;
+                subscribeHandler.Durable = durable;
+                subscribeHandler.MessageType = messageType;
+
+                var after = subscribeHandler.SerializeToJson();
+
+                subscribeHandler.HandshakeDateTime = subscribeHandler.HandshakeDateTime;
+
+                return before != after;
             }
         }
 
-        private void UpdateRequestHandler(RequestHandlerRegisterMessage message)
-        {
-            UpdateRequestHandler(message.ServerName, message.Name, message.QueueName, DateTimeOffset.Now);
-        }
-
-        private void UpdateRequestHandler(string serverName, string name, string queueName, DateTimeOffset? handshakeDateTime = null, IQueue queue = null)
+        private bool UpdateRequestHandler(string serverName, string name, string requestType, string responseType, string queueName, DateTimeOffset handshakeDateTime)
         {
             lock (RequestHandlers)
             {
@@ -940,21 +894,33 @@ namespace Grumpy.RipplesMQ.Core
 
                 if (requestHandler == null)
                 {
-                    RequestHandlers.Add(new Dto.RequestHandler
+                    requestHandler = new Dto.RequestHandler
                     {
                         ServerName = serverName,
                         Name = name,
+                        RequestType = requestType,
+                        ResponseType = responseType,
                         QueueName = queueName,
                         HandshakeDateTime = handshakeDateTime,
-                        Queue = queue
-                    });
+                        Queue = null
+                    };
+
+                    RequestHandlers.Add(requestHandler);
+
+                    return true;
                 }
-                else
-                {
-                    requestHandler.Name = name ?? requestHandler.Name;
-                    requestHandler.HandshakeDateTime = handshakeDateTime ?? requestHandler.HandshakeDateTime;
-                    requestHandler.Queue = queue ?? requestHandler.Queue;
-                }
+
+                var before = requestHandler.SerializeToJson();
+
+                requestHandler.Name = name ?? requestHandler.Name;
+                requestHandler.RequestType = requestType ?? requestHandler.RequestType;
+                requestHandler.ResponseType = responseType ?? requestHandler.ResponseType;
+
+                var after = requestHandler.SerializeToJson();
+
+                requestHandler.HandshakeDateTime = requestHandler.HandshakeDateTime;
+
+                return before != after;
             }
         }
 
@@ -1061,39 +1027,33 @@ namespace Grumpy.RipplesMQ.Core
             }
         }
 
-        private void SaveSubscriber(SubscribeHandlerRegisterMessage message)
+        private static void SaveSubscriber(IRepositories repositories, string serverName, string serviceName, Shared.Messages.SubscribeHandler message)
         {
-            using (var repositories = _repositoriesFactory.Create())
+            var subscriberRepository = repositories.SubscriberRepository();
+
+            var subscriber = subscriberRepository.Get(serverName, message.QueueName);
+
+            if (subscriber == null)
             {
-                var subscriberRepository = repositories.SubscriberRepository();
-
-                var subscriber = subscriberRepository.Get(message.ServerName, message.QueueName);
-
-                if (subscriber == null)
+                subscriber = new Subscriber
                 {
-                    subscriber = new Subscriber
-                    {
-                        ServerName = message.ServerName,
-                        ServiceName = message.ServiceName,
-                        Name = message.Name,
-                        Topic = message.Topic,
-                        QueueName = message.QueueName,
-                        RegisterDateTime = DateTimeOffset.Now,
-                        PulseDateTime = DateTimeOffset.Now
-                    };
+                    ServerName = serverName,
+                    ServiceName = serviceName,
+                    Name = message.Name,
+                    Topic = message.Topic,
+                    QueueName = message.QueueName,
+                    RegisterDateTime = DateTimeOffset.Now,
+                    PulseDateTime = DateTimeOffset.Now
+                };
 
-                    subscriberRepository.Insert(subscriber);
-                }
-                else
-                {
-                    subscriber.ServiceName = message.ServiceName;
-                    subscriber.Name = message.Name;
-                    subscriber.Topic = message.Topic;
-                    subscriber.RegisterDateTime = DateTimeOffset.Now;
-                    subscriber.PulseDateTime = DateTimeOffset.Now;
-                }
-
-                repositories.Save();
+                subscriberRepository.Insert(subscriber);
+            }
+            else
+            {
+                subscriber.ServiceName = serviceName;
+                subscriber.Name = message.Name;
+                subscriber.Topic = message.Topic;
+                subscriber.PulseDateTime = DateTimeOffset.Now;
             }
         }
 
@@ -1146,7 +1106,7 @@ namespace Grumpy.RipplesMQ.Core
             return RemoteMessageBrokerQueue(messageBrokerService, throwOnError);
         }
 
-        private IQueue RemoteMessageBrokerQueue(MessageBrokerService messageBrokerService, bool throwOnError)
+        private IQueue RemoteMessageBrokerQueue(Dto.MessageBrokerService messageBrokerService, bool throwOnError)
         {
             if (messageBrokerService.Queue == null)
                 messageBrokerService.Queue = _queueFactory.CreateRemote(messageBrokerService.ServerName, messageBrokerService.RemoteQueueName, true, RemoteQueueMode.Durable, true, AccessMode.Send);

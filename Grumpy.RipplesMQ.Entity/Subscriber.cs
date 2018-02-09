@@ -16,6 +16,7 @@ namespace Grumpy.RipplesMQ.Entity
     {
         public string Name { get; set; }
         public string Topic { get; set; }
+        public string MessageType { get; set; }
         public string ServerName { get; set; }
         public string ServiceName { get; set; }
         public string QueueName { get; set; }

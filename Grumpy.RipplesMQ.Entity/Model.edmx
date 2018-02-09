@@ -45,6 +45,7 @@
           </Key>
           <Property Name="Name" Type="nvarchar" MaxLength="256" Nullable="false" />
           <Property Name="Topic" Type="nvarchar" MaxLength="256" Nullable="false" />
+          <Property Name="MessageType" Type="nvarchar" MaxLength="512" Nullable="false" />
           <Property Name="ServerName" Type="nvarchar" MaxLength="15" Nullable="false" />
           <Property Name="ServiceName" Type="nvarchar" MaxLength="256" Nullable="false" />
           <Property Name="QueueName" Type="nvarchar" MaxLength="124" Nullable="false" />
@@ -107,6 +108,7 @@
           </Key>
           <Property Name="Name" Type="String" Nullable="false" MaxLength="256" FixedLength="false" Unicode="true" />
           <Property Name="Topic" Type="String" Nullable="false" MaxLength="256" FixedLength="false" Unicode="true" />
+          <Property Name="MessageType" Type="String" Nullable="false" MaxLength="512" FixedLength="false" Unicode="true" />
           <Property Name="ServerName" Type="String" Nullable="false" MaxLength="15" FixedLength="false" Unicode="true" />
           <Property Name="ServiceName" Type="String" Nullable="false" MaxLength="256" FixedLength="false" Unicode="true" />
           <Property Name="QueueName" Type="String" Nullable="false" MaxLength="124" FixedLength="false" Unicode="true" />
@@ -157,6 +159,7 @@
           <EntitySetMapping Name="Subscriber">
             <EntityTypeMapping TypeName="Grumpy.RipplesMQ.Entity.Model.Subscriber">
               <MappingFragment StoreEntitySet="Subscriber">
+                <ScalarProperty Name="MessageType" ColumnName="MessageType" />
                 <ScalarProperty Name="PulseDateTime" ColumnName="PulseDateTime" />
                 <ScalarProperty Name="RegisterDateTime" ColumnName="RegisterDateTime" />
                 <ScalarProperty Name="QueueName" ColumnName="QueueName" />
