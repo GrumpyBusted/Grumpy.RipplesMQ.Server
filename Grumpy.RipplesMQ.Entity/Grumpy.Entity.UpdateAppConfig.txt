@@ -2,4 +2,5 @@
 
 
 Checking for database connection in App.config and updating
+Database link file found C:\Dev\Source\Repos\Grumpy.RipplesMQ.Server\Grumpy.RipplesMQ.Database\Grumpy.RipplesMQ.Database_Model.entity_database
 

@@ -159,12 +159,12 @@
           <EntitySetMapping Name="Subscriber">
             <EntityTypeMapping TypeName="Grumpy.RipplesMQ.Entity.Model.Subscriber">
               <MappingFragment StoreEntitySet="Subscriber">
-                <ScalarProperty Name="MessageType" ColumnName="MessageType" />
                 <ScalarProperty Name="PulseDateTime" ColumnName="PulseDateTime" />
                 <ScalarProperty Name="RegisterDateTime" ColumnName="RegisterDateTime" />
                 <ScalarProperty Name="QueueName" ColumnName="QueueName" />
                 <ScalarProperty Name="ServiceName" ColumnName="ServiceName" />
                 <ScalarProperty Name="ServerName" ColumnName="ServerName" />
+                <ScalarProperty Name="MessageType" ColumnName="MessageType" />
                 <ScalarProperty Name="Topic" ColumnName="Topic" />
                 <ScalarProperty Name="Name" ColumnName="Name" />
               </MappingFragment>
