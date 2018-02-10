@@ -170,13 +170,9 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
                 new MessageBrokerService { ServerName = "MyTestServer", RemoteQueueName = "AnotherQueueName" }
             }.AsQueryable());
 
-            _subscriberRepository.GetAll().Returns(new List<Subscriber>
-            {
-                new Subscriber { ServerName = "MyTestServer", QueueName = "MyQueueName", Topic = "MyTopic" }
-            }.AsQueryable());
-
             using (var cut = CreateMessageBroker())
             {
+                cut.SubscribeHandlers.Add(new Dto.SubscribeHandler { ServerName = "MyTestServer", QueueName = "MyQueueName", Topic = "MyTopic", HandshakeDateTime = DateTimeOffset.Now });
                 cut.Start(_cancellationToken);
                 Thread.Sleep(1000);
             }

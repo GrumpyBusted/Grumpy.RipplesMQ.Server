@@ -1,4 +1,6 @@
-﻿namespace Grumpy.RipplesMQ.Core.Messages
+﻿using System;
+
+namespace Grumpy.RipplesMQ.Core.Messages
 {
     /// <summary>
     /// Locale Request Handler
@@ -29,5 +31,10 @@
         /// Queue name
         /// </summary>
         public string QueueName { get; set; }
+
+        /// <summary>
+        /// Handshake Date Time
+        /// </summary>
+        public DateTimeOffset HandshakeDateTime { get; set; }
     }
 }

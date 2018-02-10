@@ -636,12 +636,12 @@ namespace Grumpy.RipplesMQ.Core
 
             lock (RequestHandlers)
             {
-                messageBrokerHandshakeMessage.LocaleRequestHandlers = RequestHandlers.Where(r => IsLocale(r.ServerName)).Select(s => new LocaleRequestHandler { Name = s.Name, ServiceName = s.ServiceName, RequestType = s.RequestType, ResponseType = s.ResponseType, QueueName = s.QueueName }).ToList();
+                messageBrokerHandshakeMessage.LocaleRequestHandlers = RequestHandlers.Where(r => IsLocale(r.ServerName) && r.HandshakeDateTime != null).Select(s => new LocaleRequestHandler { Name = s.Name, ServiceName = s.ServiceName, RequestType = s.RequestType, ResponseType = s.ResponseType, QueueName = s.QueueName, HandshakeDateTime = s.HandshakeDateTime ?? DateTimeOffset.Now}).ToList();
             }
 
             lock (SubscribeHandlers)
             {
-                messageBrokerHandshakeMessage.LocaleSubscribeHandlers = SubscribeHandlers.Where(r => IsLocale(r.ServerName)).Select(s => new LocaleSubscribeHandler { Name = s.Name, ServiceName = s.ServiceName, QueueName = s.QueueName, Topic = s.Topic, Durable = s.Durable, MessageType = s.MessageType }).ToList();
+                messageBrokerHandshakeMessage.LocaleSubscribeHandlers = SubscribeHandlers.Where(r => IsLocale(r.ServerName) && r.HandshakeDateTime != null).Select(s => new LocaleSubscribeHandler { Name = s.Name, ServiceName = s.ServiceName, QueueName = s.QueueName, Topic = s.Topic, Durable = s.Durable, MessageType = s.MessageType, HandshakeDateTime = s.HandshakeDateTime ?? DateTimeOffset.Now}).ToList();
             }
 
             return messageBrokerHandshakeMessage;
@@ -691,12 +691,12 @@ namespace Grumpy.RipplesMQ.Core
 
             foreach (var remoteSubscribeHandler in message.LocaleSubscribeHandlers ?? Enumerable.Empty<LocaleSubscribeHandler>())
             {
-                UpdateSubscribeHandler(message.ServerName, remoteSubscribeHandler.Topic, remoteSubscribeHandler.MessageType, remoteSubscribeHandler.Name, remoteSubscribeHandler.ServiceName, remoteSubscribeHandler.QueueName, remoteSubscribeHandler.Durable, DateTimeOffset.Now);
+                UpdateSubscribeHandler(message.ServerName, remoteSubscribeHandler.Topic, remoteSubscribeHandler.MessageType, remoteSubscribeHandler.Name, remoteSubscribeHandler.ServiceName, remoteSubscribeHandler.QueueName, remoteSubscribeHandler.Durable, remoteSubscribeHandler.HandshakeDateTime);
             }
 
             foreach (var remoteRequestHandler in message.LocaleRequestHandlers ?? Enumerable.Empty<LocaleRequestHandler>())
             {
-                UpdateRequestHandler(message.ServerName, remoteRequestHandler.ServiceName, remoteRequestHandler.Name, remoteRequestHandler.RequestType, remoteRequestHandler.ResponseType, remoteRequestHandler.QueueName, DateTimeOffset.Now);
+                UpdateRequestHandler(message.ServerName, remoteRequestHandler.ServiceName, remoteRequestHandler.Name, remoteRequestHandler.RequestType, remoteRequestHandler.ResponseType, remoteRequestHandler.QueueName, remoteRequestHandler.HandshakeDateTime);
             }
         }
 
@@ -856,10 +856,10 @@ namespace Grumpy.RipplesMQ.Core
 
         private void UpdateSubscribeHandler(Subscriber subscriber)
         {
-            UpdateSubscribeHandler(subscriber.ServerName, subscriber.Topic, subscriber.MessageType, subscriber.Name, subscriber.ServiceName, subscriber.QueueName, true, DateTimeOffset.Now);
+            UpdateSubscribeHandler(subscriber.ServerName, subscriber.Topic, subscriber.MessageType, subscriber.Name, subscriber.ServiceName, subscriber.QueueName, true, null);
         }
 
-        private bool UpdateSubscribeHandler(string serverName, string topic, string messageType, string name, string serviceName, string queueName, bool durable, DateTimeOffset handshakeDateTime)
+        private bool UpdateSubscribeHandler(string serverName, string topic, string messageType, string name, string serviceName, string queueName, bool durable, DateTimeOffset? handshakeDateTime)
         {
             lock (SubscribeHandlers)
             {
@@ -894,13 +894,13 @@ namespace Grumpy.RipplesMQ.Core
 
                 var after = subscribeHandler.SerializeToJson();
 
-                subscribeHandler.HandshakeDateTime = subscribeHandler.HandshakeDateTime;
+                subscribeHandler.HandshakeDateTime = handshakeDateTime ?? subscribeHandler.HandshakeDateTime;
 
                 return before != after;
             }
         }
 
-        private bool UpdateRequestHandler(string serverName, string serviceName, string name, string requestType, string responseType, string queueName, DateTimeOffset handshakeDateTime)
+        private bool UpdateRequestHandler(string serverName, string serviceName, string name, string requestType, string responseType, string queueName, DateTimeOffset? handshakeDateTime)
         {
             lock (RequestHandlers)
             {
@@ -933,7 +933,7 @@ namespace Grumpy.RipplesMQ.Core
 
                 var after = requestHandler.SerializeToJson();
 
-                requestHandler.HandshakeDateTime = requestHandler.HandshakeDateTime;
+                requestHandler.HandshakeDateTime = handshakeDateTime ?? requestHandler.HandshakeDateTime;
 
                 return before != after;
             }

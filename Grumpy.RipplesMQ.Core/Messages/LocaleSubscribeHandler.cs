@@ -1,4 +1,6 @@
-﻿namespace Grumpy.RipplesMQ.Core.Messages
+﻿using System;
+
+namespace Grumpy.RipplesMQ.Core.Messages
 {
     /// <summary>
     /// Locale Subscribe Handler
@@ -34,5 +36,10 @@
         /// Durable Queue
         /// </summary>
         public bool Durable { get; set; }
+
+        /// <summary>
+        /// Handshake Date Time
+        /// </summary>
+        public DateTimeOffset HandshakeDateTime { get; set; }
     }
 }
