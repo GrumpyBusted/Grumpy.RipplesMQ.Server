@@ -5,12 +5,11 @@
     [SubscriberName] NVARCHAR(256) NOT NULL, 
     [State] NVARCHAR(32) NOT NULL, 
     [ErrorCount] INT NOT NULL, 
-    [UpdateDateTime] DATETIMEOFFSET NOT NULL
+    [UpdateDateTime] DATETIMEOFFSET NOT NULL DEFAULT SYSDATETIMEOFFSET()
 )
 GO
 
-CREATE UNIQUE INDEX [IX_MessageState_MessageId] ON [dbo].[MessageState] ([MessageId], [SubscriberName], [Id] DESC)
-
+CREATE UNIQUE INDEX [IX_MessageState_MessageId] ON [dbo].[MessageState] ([MessageId], [SubscriberName], [UpdateDateTime] DESC, [Id] DESC)
 GO
 
 CREATE INDEX [IX_MessageState_SubscriberName] ON [dbo].[MessageState] ([SubscriberName])

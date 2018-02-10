@@ -1,4 +1,5 @@
-﻿using Grumpy.Entity.Interfaces;
+﻿using System.Data.Entity;
+using Grumpy.Entity.Interfaces;
 using Grumpy.RipplesMQ.Core.Infrastructure;
 using Grumpy.RipplesMQ.Entity;
 using Microsoft.Extensions.Logging;
@@ -10,6 +11,7 @@ namespace Grumpy.RipplesMQ.Infrastructure.Repositories
     {
         private readonly Entities _entities;
         private bool _disposed;
+        private DbContextTransaction _dbContextTransaction;
 
         /// <inheritdoc />
         public Repositories(ILogger logger, IEntityConnectionConfig entityConnectionConfig)
@@ -48,6 +50,24 @@ namespace Grumpy.RipplesMQ.Infrastructure.Repositories
         }
 
         /// <inheritdoc />
+        public void BeginTransaction()
+        {
+            _dbContextTransaction = _entities.Database.BeginTransaction();
+        }
+
+        /// <inheritdoc />
+        public void CommitTransaction()
+        {
+            _dbContextTransaction?.Commit();
+        }
+        
+        /// <inheritdoc />
+        public void RollbackTransaction()
+        {
+            _dbContextTransaction?.Rollback();
+        }
+
+        /// <inheritdoc />
         public void Dispose()
         {
             Dispose(true);
@@ -61,7 +81,10 @@ namespace Grumpy.RipplesMQ.Infrastructure.Repositories
                 _disposed = true;
 
                 if (disposing)
+                {
+                    _dbContextTransaction?.Dispose();
                     _entities.Dispose();
+                }
             }
         }
     }

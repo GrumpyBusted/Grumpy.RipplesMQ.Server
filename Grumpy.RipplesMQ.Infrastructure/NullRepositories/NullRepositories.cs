@@ -52,5 +52,20 @@ namespace Grumpy.RipplesMQ.Infrastructure.NullRepositories
         public void Save()
         {
         }
+
+        /// <inheritdoc />
+        public void BeginTransaction()
+        {
+        }
+
+        /// <inheritdoc />
+        public void CommitTransaction()
+        {
+        }
+        
+        /// <inheritdoc />
+        public void RollbackTransaction()
+        {
+        }
     }
 }

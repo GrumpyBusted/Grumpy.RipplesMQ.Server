@@ -1069,10 +1069,10 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
             {
                 cut.SubscribeHandlers.Add(new Dto.SubscribeHandler { Topic = "MyTopic", Name = "SubscriberA", ServerName = "MyTestServer", HandshakeDateTime = DateTimeOffset.Now, QueueName = "MySubscribeQueue" });
 
-                Assert.Throws<PublishMessageException>(() => HandleMessage(cut, new SubscribeHandlerErrorMessage { Name = "SubscriberA", Message = new PublishMessage { Persistent = true, MessageId = "MessageId1", ErrorCount = 1, Topic = "MyTopic" } }));
+                Assert.Throws<PublishMessageException>(() => HandleMessage(cut, new SubscribeHandlerErrorMessage { Name = "SubscriberA", Message = new PublishMessage { Persistent = true, MessageId = "MessageId1", ErrorCount = 2, Topic = "MyTopic" } }));
             }
 
-            _messageStateRepository.Received(1).Insert(Arg.Is<MessageState>(m => m.ErrorCount == 2 && m.SubscriberName == "SubscriberA"));
+            _messageStateRepository.Received(1).Insert(Arg.Is<MessageState>(m => m.ErrorCount == 3 && m.SubscriberName == "SubscriberA"));
             _repositories.Received(1).Save();
         }
 

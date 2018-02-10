@@ -33,8 +33,23 @@ namespace Grumpy.RipplesMQ.Core.Infrastructure
         ISubscriberRepository SubscriberRepository();
 
         /// <summary>
-        /// Saves this instance.
+        /// Save changes
         /// </summary>
         void Save();
+
+        /// <summary>
+        /// Begin Database Transaction
+        /// </summary>
+        void BeginTransaction();
+
+        /// <summary>
+        /// Commit Database Transaction
+        /// </summary>
+        void CommitTransaction();
+ 
+        /// <summary>
+        /// Rollback Database Transaction
+        /// </summary>
+        void RollbackTransaction();
     }
 }
