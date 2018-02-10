@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Authentication.ExtendedProtection;
 using System.Threading;
 using System.Threading.Tasks;
 using Grumpy.Common;
@@ -23,6 +24,7 @@ using Grumpy.RipplesMQ.Shared.Exceptions;
 using Grumpy.RipplesMQ.Shared.Messages;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using RequestHandler = Grumpy.RipplesMQ.Core.Dto.RequestHandler;
 
 namespace Grumpy.RipplesMQ.Core
 {
@@ -203,7 +205,8 @@ namespace Grumpy.RipplesMQ.Core
 
         private void SendMessageBrokerHandshakes()
         {
-            _logger.Debug("Message Broker State {@MessageBrokerServices} {@SubscriberHandlers} {@RequestHandlers}", MessageBrokerServices, SubscribeHandlers, RequestHandlers);
+            // TODO: Change to Debug 
+            _logger.Information("Message Broker State {@MessageBrokerServices} {@SubscriberHandlers} {@RequestHandlers}", MessageBrokerServices, SubscribeHandlers, RequestHandlers);
 
             Handler(new SendMessageBrokerHandshakeMessage(), _cancellationToken);
         }
@@ -241,7 +244,7 @@ namespace Grumpy.RipplesMQ.Core
             {
                 foreach (var subscribeHandler in message.SubscribeHandlers ?? Enumerable.Empty<Shared.Messages.SubscribeHandler>())
                 {
-                    changed |= UpdateSubscribeHandler(message.ServerName, subscribeHandler.Topic, subscribeHandler.MessageType, subscribeHandler.Name, subscribeHandler.QueueName, subscribeHandler.Durable, DateTimeOffset.Now);
+                    changed |= UpdateSubscribeHandler(message.ServerName, subscribeHandler.Topic, subscribeHandler.MessageType, subscribeHandler.Name, message.ServiceName, subscribeHandler.QueueName, subscribeHandler.Durable, DateTimeOffset.Now);
 
                     if (subscribeHandler.Durable)
                     {
@@ -255,7 +258,17 @@ namespace Grumpy.RipplesMQ.Core
                     repositories.Save();
             }
 
-            changed = (message.RequestHandlers ?? Enumerable.Empty<Shared.Messages.RequestHandler>()).Aggregate(changed, (current, requestHandler) => current | UpdateRequestHandler(message.ServerName, requestHandler.Name, requestHandler.RequestType, requestHandler.ResponseType, requestHandler.QueueName, DateTimeOffset.Now));
+            lock (SubscribeHandlers)
+            {
+                changed |= SubscribeHandlers.RemoveAll(e => e.ServerName == message.ServerName && e.ServiceName == message.ServiceName && !message.SubscribeHandlers.Select(r => r.QueueName).Contains(e.QueueName)) > 0;
+            }
+
+            changed = (message.RequestHandlers ?? Enumerable.Empty<Shared.Messages.RequestHandler>()).Aggregate(changed, (current, requestHandler) => current | UpdateRequestHandler(message.ServerName, message.ServiceName, requestHandler.Name, requestHandler.RequestType, requestHandler.ResponseType, requestHandler.QueueName, DateTimeOffset.Now));
+
+            lock (RequestHandlers)
+            {
+                changed |= RequestHandlers.RemoveAll(e => e.ServerName == message.ServerName && e.ServiceName == message.ServiceName && !message.RequestHandlers.Select(r => r.QueueName).Contains(e.QueueName)) > 0;
+            }
 
             SendReply(message.ReplyQueue, CreateMessageBusServiceHandshakeReplyMessage(message), false);
 
@@ -623,12 +636,12 @@ namespace Grumpy.RipplesMQ.Core
 
             lock (RequestHandlers)
             {
-                messageBrokerHandshakeMessage.LocaleRequestHandlers = RequestHandlers.Where(r => IsLocale(r.ServerName)).Select(s => new LocaleRequestHandler { Name = s.Name, RequestType = s.RequestType, ResponseType = s.ResponseType, QueueName = s.QueueName }).ToList();
+                messageBrokerHandshakeMessage.LocaleRequestHandlers = RequestHandlers.Where(r => IsLocale(r.ServerName)).Select(s => new LocaleRequestHandler { Name = s.Name, ServiceName = s.ServiceName, RequestType = s.RequestType, ResponseType = s.ResponseType, QueueName = s.QueueName }).ToList();
             }
 
             lock (SubscribeHandlers)
             {
-                messageBrokerHandshakeMessage.LocaleSubscribeHandlers = SubscribeHandlers.Where(r => IsLocale(r.ServerName)).Select(s => new LocaleSubscribeHandler { Name = s.Name, QueueName = s.QueueName, Topic = s.Topic, Durable = s.Durable, MessageType = s.MessageType }).ToList();
+                messageBrokerHandshakeMessage.LocaleSubscribeHandlers = SubscribeHandlers.Where(r => IsLocale(r.ServerName)).Select(s => new LocaleSubscribeHandler { Name = s.Name, ServiceName = s.ServiceName, QueueName = s.QueueName, Topic = s.Topic, Durable = s.Durable, MessageType = s.MessageType }).ToList();
             }
 
             return messageBrokerHandshakeMessage;
@@ -678,12 +691,12 @@ namespace Grumpy.RipplesMQ.Core
 
             foreach (var remoteSubscribeHandler in message.LocaleSubscribeHandlers ?? Enumerable.Empty<LocaleSubscribeHandler>())
             {
-                UpdateSubscribeHandler(message.ServerName, remoteSubscribeHandler.Topic, remoteSubscribeHandler.MessageType, remoteSubscribeHandler.Name, remoteSubscribeHandler.QueueName, remoteSubscribeHandler.Durable, DateTimeOffset.Now);
+                UpdateSubscribeHandler(message.ServerName, remoteSubscribeHandler.Topic, remoteSubscribeHandler.MessageType, remoteSubscribeHandler.Name, remoteSubscribeHandler.ServiceName, remoteSubscribeHandler.QueueName, remoteSubscribeHandler.Durable, DateTimeOffset.Now);
             }
 
             foreach (var remoteRequestHandler in message.LocaleRequestHandlers ?? Enumerable.Empty<LocaleRequestHandler>())
             {
-                UpdateRequestHandler(message.ServerName, remoteRequestHandler.Name, remoteRequestHandler.RequestType, remoteRequestHandler.ResponseType, remoteRequestHandler.QueueName, DateTimeOffset.Now);
+                UpdateRequestHandler(message.ServerName, remoteRequestHandler.ServiceName, remoteRequestHandler.Name, remoteRequestHandler.RequestType, remoteRequestHandler.ResponseType, remoteRequestHandler.QueueName, DateTimeOffset.Now);
             }
         }
 
@@ -843,10 +856,10 @@ namespace Grumpy.RipplesMQ.Core
 
         private void UpdateSubscribeHandler(Subscriber subscriber)
         {
-            UpdateSubscribeHandler(subscriber.ServerName, subscriber.Topic, subscriber.MessageType, subscriber.Name, subscriber.QueueName, true, DateTimeOffset.Now);
+            UpdateSubscribeHandler(subscriber.ServerName, subscriber.Topic, subscriber.MessageType, subscriber.Name, subscriber.ServiceName, subscriber.QueueName, true, DateTimeOffset.Now);
         }
 
-        private bool UpdateSubscribeHandler(string serverName, string topic, string messageType, string name, string queueName, bool durable, DateTimeOffset handshakeDateTime)
+        private bool UpdateSubscribeHandler(string serverName, string topic, string messageType, string name, string serviceName, string queueName, bool durable, DateTimeOffset handshakeDateTime)
         {
             lock (SubscribeHandlers)
             {
@@ -857,6 +870,7 @@ namespace Grumpy.RipplesMQ.Core
                     subscribeHandler = new Dto.SubscribeHandler
                     {
                         ServerName = serverName,
+                        ServiceName = serviceName,
                         Topic = topic,
                         MessageType = messageType,
                         Name = name,
@@ -886,7 +900,7 @@ namespace Grumpy.RipplesMQ.Core
             }
         }
 
-        private bool UpdateRequestHandler(string serverName, string name, string requestType, string responseType, string queueName, DateTimeOffset handshakeDateTime)
+        private bool UpdateRequestHandler(string serverName, string serviceName, string name, string requestType, string responseType, string queueName, DateTimeOffset handshakeDateTime)
         {
             lock (RequestHandlers)
             {
@@ -897,6 +911,7 @@ namespace Grumpy.RipplesMQ.Core
                     requestHandler = new Dto.RequestHandler
                     {
                         ServerName = serverName,
+                        ServiceName = serviceName,
                         Name = name,
                         RequestType = requestType,
                         ResponseType = responseType,

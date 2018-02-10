@@ -21,6 +21,11 @@
         public string Name { get; set; }
 
         /// <summary>
+        /// Service Name
+        /// </summary>
+        public string ServiceName { get; set; }
+
+        /// <summary>
         /// Queue Name
         /// </summary>
         public string QueueName { get; set; }

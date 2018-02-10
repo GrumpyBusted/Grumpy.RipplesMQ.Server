@@ -818,6 +818,49 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
         }
 
         [Fact]
+        public void HandlingMessageBusServiceHandshakeMessageRequesterHandlerMissingShouldRemoveFromState()
+        {
+            using (var cut = CreateMessageBroker())
+            {
+                cut.RequestHandlers.Add(new Dto.RequestHandler { ServerName = "MyTestServer", QueueName = "MyQueueName", Name = "MyRequestHandler" });
+
+                HandleMessage(cut, new MessageBusServiceHandshakeMessage
+                {
+                    ServerName = "MyTestServer",
+                    RequestHandlers = new List<RequestHandler>
+                    {
+                        new RequestHandler { QueueName = "MyQueueName2", Name = "MyRequestHandler" }
+                    }
+                });
+
+                cut.RequestHandlers.Count.Should().Be(1);
+                cut.RequestHandlers.Count(e => e.QueueName == "MyQueueName2").Should().Be(1);
+            }
+        }
+
+        // TODO: Remove Subscribe handler
+        [Fact]
+        public void HandlingMessageBusServiceHandshakeSubscriberMessageHandlerMissingShouldRemoveFromState()
+        {
+            using (var cut = CreateMessageBroker())
+            {
+                cut.SubscribeHandlers.Add(new Dto.SubscribeHandler() { ServerName = "MyTestServer", QueueName = "MyQueueName", Name = "MyRequestHandler" });
+
+                HandleMessage(cut, new MessageBusServiceHandshakeMessage
+                {
+                    ServerName = "MyTestServer",
+                    SubscribeHandlers = new List<SubscribeHandler>
+                    {
+                        new SubscribeHandler() { QueueName = "MyQueueName2", Name = "MyRequestHandler" }
+                    }
+                });
+
+                cut.SubscribeHandlers.Count.Should().Be(1);
+                cut.SubscribeHandlers.Count(e => e.QueueName == "MyQueueName2").Should().Be(1);
+            }
+        }
+
+        [Fact]
         public void HandlingPublishPersistentMessageShouldSaveMessageToRepository()
         {
             HandleMessage(CreatePublishMessage("MyReplyQueue", "MyTopic", "Message"));

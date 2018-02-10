@@ -9,6 +9,11 @@
         /// Name
         /// </summary>
         public string Name { get; set; }
+
+        /// <summary>
+        /// Service Name
+        /// </summary>
+        public string ServiceName { get; set; }
         
         /// <summary>
         /// Message Type
