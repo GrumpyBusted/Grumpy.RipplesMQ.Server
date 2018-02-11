@@ -19,12 +19,5 @@ namespace Grumpy.RipplesMQ.Core.Exceptions
         {
             Data.Add(nameof(message), message.TrySerializeToJson());
         }
-
-        /// <inheritdoc />
-        public PublishMessageException(string text, Dto.SubscribeHandler subscribeHandler, SubscribeHandlerErrorMessage message) : base(text)
-        {
-            Data.Add(nameof(subscribeHandler), subscribeHandler.TrySerializeToJson());
-            Data.Add(nameof(message), message.TrySerializeToJson());
-        }
     }
 }

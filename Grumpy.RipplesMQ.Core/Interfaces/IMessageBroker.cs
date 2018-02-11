@@ -21,13 +21,12 @@ namespace Grumpy.RipplesMQ.Core.Interfaces
         /// Stop
         /// </summary>
         void Stop();
-        
+
         /// <summary>
         /// Message handler message
         /// </summary>
         /// <param name="message">The Message</param>
-        /// <param name="cancellationToken">Cancellation Token</param>
-        void Handler(object message, CancellationToken cancellationToken);
+        void Handler(object message);
 
         /// <summary>
         /// Error message handler message

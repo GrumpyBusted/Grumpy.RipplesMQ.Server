@@ -834,20 +834,19 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
             }
         }
 
-        // TODO: Remove Subscribe handler
         [Fact]
         public void HandlingMessageBusServiceHandshakeSubscriberMessageHandlerMissingShouldRemoveFromState()
         {
             using (var cut = CreateMessageBroker())
             {
-                cut.SubscribeHandlers.Add(new Dto.SubscribeHandler() { ServerName = "MyTestServer", QueueName = "MyQueueName", Name = "MyRequestHandler" });
+                cut.SubscribeHandlers.Add(new Dto.SubscribeHandler { ServerName = "MyTestServer", QueueName = "MyQueueName", Name = "MyRequestHandler" });
 
                 HandleMessage(cut, new MessageBusServiceHandshakeMessage
                 {
                     ServerName = "MyTestServer",
                     SubscribeHandlers = new List<SubscribeHandler>
                     {
-                        new SubscribeHandler() { QueueName = "MyQueueName2", Name = "MyRequestHandler" }
+                        new SubscribeHandler { QueueName = "MyQueueName2", Name = "MyRequestHandler" }
                     }
                 });
 
@@ -862,7 +861,7 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
             HandleMessage(CreatePublishMessage("MyReplyQueue", "MyTopic", "Message"));
 
             _messageRepository.Received(1).Insert(Arg.Any<Message>());
-            _repositories.Received(2).Save();
+            _repositories.Received(1).Save();
         }
 
         private static PublishMessage CreatePublishMessage<T>(string replyQueue, string topic, T message, bool persistent = true)
@@ -1338,9 +1337,9 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
             }
         }
 
-        private void HandleMessage(IMessageBroker cut, object message)
+        private static void HandleMessage(IMessageBroker cut, object message)
         {
-            cut.Handler(message, _cancellationToken);
+            cut.Handler(message);
         }
 
         private IMessageBroker CreateMessageBroker()

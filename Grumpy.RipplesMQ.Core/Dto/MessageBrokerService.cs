@@ -31,7 +31,7 @@ namespace Grumpy.RipplesMQ.Core.Dto
         /// <summary>
         /// Queue
         /// </summary>
-        public IQueue Queue { get; set; }
+        public IRemoteQueue Queue { get; set; }
 
         /// <summary>
         /// Error Count - Number of times unable to send handshake

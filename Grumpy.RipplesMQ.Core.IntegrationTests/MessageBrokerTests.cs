@@ -47,7 +47,7 @@ namespace Grumpy.RipplesMQ.Core.IntegrationTests
                     ReplyQueue = "MyQueue",
                     SendDateTime = DateTimeOffset.Now,
                     SubscribeHandlers = new List<SubscribeHandler> { new SubscribeHandler { Name = "MySubscriber", QueueName = "MyQueue", Durable = true, MessageType = "string", Topic = "MyTopic" } }
-                }, cancellationToken);
+                });
             }
         }
     }

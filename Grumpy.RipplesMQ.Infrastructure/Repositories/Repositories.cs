@@ -62,12 +62,6 @@ namespace Grumpy.RipplesMQ.Infrastructure.Repositories
         }
         
         /// <inheritdoc />
-        public void RollbackTransaction()
-        {
-            _dbContextTransaction?.Rollback();
-        }
-
-        /// <inheritdoc />
         public void Dispose()
         {
             Dispose(true);

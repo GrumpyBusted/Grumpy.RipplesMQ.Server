@@ -46,10 +46,5 @@ namespace Grumpy.RipplesMQ.Core.Infrastructure
         /// Commit Database Transaction
         /// </summary>
         void CommitTransaction();
- 
-        /// <summary>
-        /// Rollback Database Transaction
-        /// </summary>
-        void RollbackTransaction();
     }
 }
