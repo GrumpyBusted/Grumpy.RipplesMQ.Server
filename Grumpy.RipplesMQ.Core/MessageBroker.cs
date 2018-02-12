@@ -214,7 +214,7 @@ namespace Grumpy.RipplesMQ.Core
         {
             _logger.Debug("Message Broker State {@MessageBrokerServices} {@SubscriberHandlers} {@RequestHandlers}", MessageBrokerServices, SubscribeHandlers, RequestHandlers);
 
-            Handler((object) new SendMessageBrokerHandshakeMessage());
+            Handler((object)new SendMessageBrokerHandshakeMessage());
         }
 
         private void SendRepositoryCleanupMessage()
@@ -230,7 +230,7 @@ namespace Grumpy.RipplesMQ.Core
             {
                 _logger.Debug("This Message Broker is mediating the repository cleanup {MyId}", _messageBrokerServiceInformation.Id);
 
-                Handler((object) new RepositoryCleanupMessage());
+                Handler((object)new RepositoryCleanupMessage());
 
                 foreach (var serverName in MessageBrokerServices.Select(s => s.ServerName).Distinct())
                 {
@@ -264,22 +264,44 @@ namespace Grumpy.RipplesMQ.Core
                     repositories.Save();
             }
 
-            lock (SubscribeHandlers)
-            {
-                changed |= SubscribeHandlers.RemoveAll(e => e.ServerName == message.ServerName && e.ServiceName == message.ServiceName && !message.SubscribeHandlers.Select(r => r.QueueName).Contains(e.QueueName)) > 0;
-            }
-
-            changed = (message.RequestHandlers ?? Enumerable.Empty<Shared.Messages.RequestHandler>()).Aggregate(changed, (current, requestHandler) => current | UpdateRequestHandler(message.ServerName, message.ServiceName, requestHandler.Name, requestHandler.RequestType, requestHandler.ResponseType, requestHandler.QueueName, DateTimeOffset.Now));
-
-            lock (RequestHandlers)
-            {
-                changed |= RequestHandlers.RemoveAll(e => e.ServerName == message.ServerName && e.ServiceName == message.ServiceName && !message.RequestHandlers.Select(r => r.QueueName).Contains(e.QueueName)) > 0;
-            }
+            changed |= InactivateRemovedDurableSubscribeHandlers(message);
+            changed |= RemoveNonDurableSubscribeHandlersNotInHandshake(message);
+            changed |= UpdateRequestHandlersHandshakeTime(message);
+            changed |= RemoveRequestHandlersNotInHandshake(message);
 
             SendReply(message.ReplyQueue, CreateMessageBusServiceHandshakeReplyMessage(message), false);
 
             if (changed)
                 SendMessageBrokerHandshakes();
+        }
+
+        private bool RemoveRequestHandlersNotInHandshake(MessageBusServiceHandshakeMessage message)
+        {
+            lock (RequestHandlers)
+            {
+                return RequestHandlers.RemoveAll(e => e.ServerName == message.ServerName && e.ServiceName == message.ServiceName && !message.RequestHandlers.Select(r => r.QueueName).Contains(e.QueueName)) > 0;
+            }
+        }
+
+        private bool UpdateRequestHandlersHandshakeTime(MessageBusServiceHandshakeMessage message)
+        {
+            lock (SubscribeHandlers)
+            {
+                return (message.RequestHandlers ?? Enumerable.Empty<Shared.Messages.RequestHandler>()).Aggregate(false, (current, handler) => current | UpdateRequestHandler(message.ServerName, message.ServiceName, handler.Name, handler.RequestType, handler.ResponseType, handler.QueueName, DateTimeOffset.Now));
+            }
+        }
+
+        private bool RemoveNonDurableSubscribeHandlersNotInHandshake(MessageBusServiceHandshakeMessage message)
+        {
+            lock (SubscribeHandlers)
+            {
+                return SubscribeHandlers.RemoveAll(e => e.ServerName == message.ServerName && e.ServiceName == message.ServiceName && !message.SubscribeHandlers.Select(r => r.QueueName).Contains(e.QueueName) && !e.Durable) > 0;
+            }
+        }
+
+        private bool InactivateRemovedDurableSubscribeHandlers(MessageBusServiceHandshakeMessage message)
+        {
+            return SubscribeHandlers.Where(e => e.ServerName == message.ServerName && e.ServiceName == message.ServiceName && !message.SubscribeHandlers.Select(r => r.QueueName).Contains(e.QueueName) && e.Durable).Select(c => { c.HandshakeDateTime = null; return c; }).ToList().Any();
         }
 
         private MessageBusServiceHandshakeReplyMessage CreateMessageBusServiceHandshakeReplyMessage(MessageBusServiceHandshakeMessage message)
@@ -1180,7 +1202,7 @@ namespace Grumpy.RipplesMQ.Core
 
             return RemoteMessageBrokerQueue(messageBrokerService);
         }
-        
+
         private void SendToRemoteMessageBroker<T>(Dto.MessageBrokerService messageBrokerService, T message)
         {
             var queue = RemoteMessageBrokerQueue(messageBrokerService);

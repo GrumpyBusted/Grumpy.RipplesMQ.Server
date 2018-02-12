@@ -856,6 +856,27 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
         }
 
         [Fact]
+        public void HandlingMessageBusServiceHandshakeSubscriberMessageHandlerMissingDurableShouldNotRemoveFromState()
+        {
+            using (var cut = CreateMessageBroker())
+            {
+                cut.SubscribeHandlers.Add(new Dto.SubscribeHandler { ServerName = "MyTestServer", QueueName = "MyQueueName1", Name = "MyRequestHandler", Durable = true, HandshakeDateTime = DateTimeOffset.Now });
+
+                HandleMessage(cut, new MessageBusServiceHandshakeMessage
+                {
+                    ServerName = "MyTestServer",
+                    SubscribeHandlers = new List<SubscribeHandler>
+                    {
+                        new SubscribeHandler { QueueName = "MyQueueName2", Name = "MyRequestHandler" }
+                    }
+                });
+
+                cut.SubscribeHandlers.Count.Should().Be(2);
+                cut.SubscribeHandlers.Count(e => e.QueueName == "MyQueueName1" && e.HandshakeDateTime == null).Should().Be(1);
+            }
+        }
+
+        [Fact]
         public void HandlingPublishPersistentMessageShouldSaveMessageToRepository()
         {
             HandleMessage(CreatePublishMessage("MyReplyQueue", "MyTopic", "Message"));
