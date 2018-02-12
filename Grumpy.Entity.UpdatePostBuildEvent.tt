@@ -1,0 +1,87 @@
+﻿<#@ template language="C#" debug="true" hostspecific="true" #>
+<#@ assembly name="System.Xml" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Xml" #>
+<#@ import namespace="System.Collections" #>
+<#@ import namespace="System.IO" #>
+<#@ output extension=".txt" #>Checking for MS SQL Project and updating PostBuildEvent
+<#
+var projectDir = Host.ResolveAssemblyReference("$(ProjectDir)");
+var solutionDir = Host.ResolveAssemblyReference("$(SolutionDir)");
+var sqlProjects = Directory.EnumerateFiles(solutionDir, "*.sqlproj", SearchOption.AllDirectories);
+var scriptName = "Grumpy.Entity.PublishDacpac.ps1";
+var scriptFile = $"{solutionDir}Grumpy.Entity.PublishDacpac.ps1";
+var postBuildEvent = $@"powershell -file $(SolutionDir){scriptName} -TargetPath $(TargetPath) -ProjectDir $(ProjectDir) -ProjectName $(ProjectName)";
+
+if (sqlProjects != null)
+{
+    if (sqlProjects.Any())
+	{
+	    if (File.Exists(scriptFile))
+            File.SetAttributes(scriptFile, File.GetAttributes(scriptFile) & ~FileAttributes.ReadOnly);
+
+        File.Copy($"{projectDir}{scriptName}", scriptFile, true);
+	} 
+
+    foreach (var sqlProject in sqlProjects)
+	{
+        #>Project file found <#= sqlProject #>
+<#
+        var xmlDocument = new XmlDocument();
+        xmlDocument.Load(sqlProject);
+        var projectNode = GetFromPath(xmlDocument, "Project");
+
+        if (projectNode != null)
+        {
+            var postBuildEventNode = GetFromPath(projectNode.ChildNodes, "PropertyGroup/PostBuildEvent");
+
+            if (postBuildEventNode == null)
+            {
+                var propertyGroupNode = projectNode.AppendChild(xmlDocument.CreateElement("PropertyGroup", projectNode.NamespaceURI));
+
+                postBuildEventNode = propertyGroupNode.AppendChild(xmlDocument.CreateElement("PostBuildEvent", projectNode.NamespaceURI));
+            }
+
+            if (postBuildEventNode.InnerText != postBuildEvent)
+            {
+#>Project updated!
+<#
+                postBuildEventNode.InnerText = postBuildEvent;
+                xmlDocument.Save(sqlProject);
+            }
+	        else 
+		    { 
+#>Project not updated!
+<#
+		    }
+        }
+	}
+}
+
+XmlNode GetFromPath(IEnumerable xmlNodes, string path)
+{
+    var pos = path.IndexOf('/');
+    var firstPart = pos >= 0 ? path.Substring(0, pos) : path;
+    var lastPart = pos >= 0 ? path.Substring(pos + 1) : "";
+
+    if (!string.IsNullOrEmpty(firstPart))
+    {
+        foreach (XmlNode node in xmlNodes)
+        {
+            if (node.Name == firstPart)
+            {
+                if (string.IsNullOrEmpty(lastPart))
+                    return node;
+
+                var currentNode = GetFromPath(node.ChildNodes, lastPart);
+
+                if (currentNode != null)
+                    return currentNode;
+            }
+        }
+    }
+
+    return null;
+}
+#>

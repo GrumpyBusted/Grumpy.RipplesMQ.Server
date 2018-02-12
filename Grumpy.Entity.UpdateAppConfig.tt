@@ -1,0 +1,112 @@
+﻿<#@ template debug="true" hostspecific="true" language="C#" #>
+<#@ import namespace="System.Collections" #>
+<#@ output extension=".txt" #>
+<#@ include file="EF6.Utility.CS.ttinclude"#>Checking for database connection in App.config and updating
+<#
+var textTransform = DynamicTextTransformation.Create(this);
+var loader = new EdmMetadataLoader(textTransform.Host, textTransform.Errors);
+var solutionDir = Host.ResolveAssemblyReference("$(SolutionDir)");
+var projectDir = Host.ResolveAssemblyReference("$(ProjectDir)");
+var modelFiles = Directory.EnumerateFiles(projectDir).Where(f => f.EndsWith(".edmx"));
+
+if (!modelFiles.Any()) 
+    return "No Entity Framework Model (.edmx) found"; 
+
+var modelFile = modelFiles.SingleOrDefault();
+
+if (modelFile == null) 
+    return "This template only supports one Entity Framework Model (.edmx) file per project"; 
+
+var modelName = Path.GetFileNameWithoutExtension(modelFile);
+var itemCollection = loader.CreateEdmItemCollection(modelFile);
+
+var container = itemCollection.OfType<EntityContainer>().FirstOrDefault();
+if (container == null)
+    return "Entity Container not found"; 
+
+var databaseLinkFiles = Directory.EnumerateFiles(solutionDir, "*.entity_database", SearchOption.AllDirectories);
+if (!databaseLinkFiles.Any())
+    return "No database link file found";
+
+if (databaseLinkFiles.Any())
+{
+    foreach (var databaseLinkFile in databaseLinkFiles)
+    {
+        #>Database link file found <#= databaseLinkFile #>
+<#
+        var databaseName = Path.GetFileNameWithoutExtension(databaseLinkFile); 
+        var databaseServer = File.ReadLines(databaseLinkFile).FirstOrDefault();
+
+        UpdateAppConfig($@"{projectDir}\App.config", container.Name, EntityConnectionString(databaseServer, databaseName, modelName));
+    }
+}
+#>
+<#+
+private static void UpdateAppConfig(string appConfig, string connectionName, string connectionString)
+{
+    var xmlDocument = new XmlDocument(); 
+
+    if (File.Exists(appConfig)) {
+        File.SetAttributes(appConfig, File.GetAttributes(appConfig) & ~FileAttributes.ReadOnly);
+        xmlDocument.Load(appConfig);
+    }
+    else
+        CreateAppConfig(xmlDocument);
+
+    var connectionStringsNode = GetNode(xmlDocument, GetNode(xmlDocument, xmlDocument, "configuration"), "connectionStrings");
+
+    var addNode = FindNode(connectionStringsNode.SelectNodes("add")?.GetEnumerator(), "name", connectionName) ?? AddNode(xmlDocument, connectionStringsNode, "add", "name", connectionName);
+
+    addNode.SetAttribute("connectionString", connectionString);
+    addNode.SetAttribute("providerName", "System.Data.EntityClient");
+
+    xmlDocument.Save(appConfig);
+}
+
+private static string EntityConnectionString(string databaseServer, string databaseName, string modelFileName)
+{
+    return $"metadata=res://*/{modelFileName}.csdl|res://*/{modelFileName}.ssdl|res://*/{modelFileName}.msl;provider=System.Data.SqlClient;provider connection string=\"data source={databaseServer};initial catalog={databaseName};integrated security=True;MultipleActiveResultSets=True;App=EntityFramework\"";
+}
+
+private static XmlElement FindNode(IEnumerator addNodes, string attributeName, string attributeValue)
+{
+    XmlElement addNode = null;
+
+    while (addNodes != null && addNodes.MoveNext() && addNode == null)
+    {
+        if ((addNodes.Current as XmlElement)?.GetAttribute(attributeName) == attributeValue)
+            addNode = addNodes.Current as XmlElement;
+    }
+
+    return addNode;
+}
+
+private static XmlElement AddNode(XmlDocument xmlDocument, XmlNode xmlNode, string nodeName, string attributeName, string attributeValue)
+{
+    var node = xmlDocument.CreateElement(nodeName);
+
+    xmlNode.AppendChild(node);
+    node.SetAttribute(attributeName, attributeValue);
+
+    return node;
+}
+
+private static XmlNode GetNode(XmlDocument xmlDocument, XmlNode xmlNode, string nodeName)
+{
+    return xmlNode.SelectSingleNode(nodeName) ?? xmlNode.AppendChild(xmlDocument.CreateElement(nodeName));
+}
+
+private static void CreateAppConfig(XmlDocument xmlDocument)
+{
+    xmlDocument.AppendChild(xmlDocument.CreateXmlDeclaration("1.0", "utf-8", null));
+    xmlDocument.AppendChild(xmlDocument.CreateElement("configuration"));
+}
+
+public static void ArgumentNotNull<T>(T arg, string name) where T : class
+{
+    if (arg == null)
+    {
+        throw new ArgumentNullException(name);
+    }
+}
+#>
