@@ -3,12 +3,12 @@
 namespace Grumpy.RipplesMQ.Infrastructure.NullRepositories
 {
     /// <inheritdoc />
-    public class NullRepositoriesFactory : IRepositoriesFactory
+    public class NullRepositoryContextFactory : IRepositoryContextFactory
     {
         /// <inheritdoc />
-        public IRepositories Create()
+        public IRepositoryContext Get()
         {
-            return new NullRepositories();
+            return new NullRepositoryContext();
         }
     }
 }

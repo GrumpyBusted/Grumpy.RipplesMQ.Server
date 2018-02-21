@@ -48,8 +48,8 @@
     <Compile Include="Infrastructure\IMessageBrokerServiceRepository.cs" />
     <Compile Include="Infrastructure\IMessageRepository.cs" />
     <Compile Include="Infrastructure\IMessageStateRepository.cs" />
-    <Compile Include="Infrastructure\IRepositories.cs" />
-    <Compile Include="Infrastructure\IRepositoriesFactory.cs" />
+    <Compile Include="Infrastructure\IRepositoryContext.cs" />
+    <Compile Include="Infrastructure\IRepositoryContextFactory.cs" />
     <Compile Include="Infrastructure\ISubscriberRepository.cs" />
     <Compile Include="Interfaces\IMessageBroker.cs" />
     <Compile Include="MessageBroker.cs" />

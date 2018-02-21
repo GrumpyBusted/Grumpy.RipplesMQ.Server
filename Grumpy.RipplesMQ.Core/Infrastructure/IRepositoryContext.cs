@@ -6,31 +6,31 @@ namespace Grumpy.RipplesMQ.Core.Infrastructure
     /// <summary>
     /// Repositories for Message Broker
     /// </summary>
-    public interface IRepositories : IDisposable
+    public interface IRepositoryContext : IDisposable
     {
         /// <summary>
         /// Message Repository
         /// </summary>
         /// <returns>Message Repository</returns>
-        IMessageRepository MessageRepository();
-        
+        IMessageRepository MessageRepository { get; }
+
         /// <summary>
         /// Message Broker Service Repository
         /// </summary>
         /// <returns>Message Broker Service Repository</returns>
-        IMessageBrokerServiceRepository MessageBrokerServiceRepository();
-        
+        IMessageBrokerServiceRepository MessageBrokerServiceRepository { get; }
+
         /// <summary>
         /// Message/Subscriber State Repository
         /// </summary>
         /// <returns>Message/Subscriber State Repository</returns>
-        IMessageStateRepository MessageStateRepository();
+        IMessageStateRepository MessageStateRepository { get; }
 
         /// <summary>
         /// Subscriber Repository
         /// </summary>
         /// <returns>Subscriber Repository</returns>
-        ISubscriberRepository SubscriberRepository();
+        ISubscriberRepository SubscriberRepository { get; }
 
         /// <summary>
         /// Save changes

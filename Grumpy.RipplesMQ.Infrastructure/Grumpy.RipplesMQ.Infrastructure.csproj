@@ -39,15 +39,15 @@
     <Compile Include="NullRepositories\NullMessageBrokerServiceRepository.cs" />
     <Compile Include="NullRepositories\NullMessageRepository.cs" />
     <Compile Include="NullRepositories\NullMessageStateRepository.cs" />
-    <Compile Include="NullRepositories\NullRepositories.cs" />
-    <Compile Include="NullRepositories\NullRepositoriesFactory.cs" />
+    <Compile Include="NullRepositories\NullRepositoryContext.cs" />
+    <Compile Include="NullRepositories\NullRepositoryContextFactory.cs" />
     <Compile Include="NullRepositories\NullSubscriberRepository.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Repositories\MessageBrokerServiceRepository.cs" />
     <Compile Include="Repositories\MessageRepository.cs" />
     <Compile Include="Repositories\MessageStateRepository.cs" />
-    <Compile Include="Repositories\Repositories.cs" />
-    <Compile Include="Repositories\RepositoriesFactory.cs" />
+    <Compile Include="Repositories\RepositoryContext.cs" />
+    <Compile Include="Repositories\RepositoryContextFactory.cs" />
     <Compile Include="Repositories\SubscriberRepository.cs" />
   </ItemGroup>
   <ItemGroup>

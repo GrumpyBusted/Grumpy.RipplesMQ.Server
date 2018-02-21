@@ -15,14 +15,14 @@ namespace Grumpy.RipplesMQ.Infrastructure.IntegrationTests
     {
         private readonly EntityConnectionConfig _entityConnectionConfig;
         private const string ServerName = "MyServer";
-        private readonly IRepositoriesFactory _repositoriesFactory;
+        private readonly IRepositoryContextFactory _repositoryContextFactory;
         private readonly string _queueName;
 
         public SubscriberRepositoryTests()
         {
             _queueName = UniqueKeyUtility.Generate();
             _entityConnectionConfig = new EntityConnectionConfig(new DatabaseConnectionConfig(@"(localdb)\MSSQLLocalDB", "Grumpy.RipplesMQ.Database_Model"));
-            _repositoriesFactory = new RepositoriesFactory(NullLogger.Instance, _entityConnectionConfig);
+            _repositoryContextFactory = new RepositoryContextFactory(NullLogger.Instance, _entityConnectionConfig);
         }
 
         [Fact]
@@ -30,16 +30,16 @@ namespace Grumpy.RipplesMQ.Infrastructure.IntegrationTests
         {
             try
             {
-                using (var repositories = _repositoriesFactory.Create())
+                using (var repositoryContext = _repositoryContextFactory.Get())
                 {
-                    var cut = repositories.SubscriberRepository();
+                    var cut = repositoryContext.SubscriberRepository;
 
                     cut.Get(ServerName, _queueName).Should().BeNull();
                 }
 
-                using (var repositories = _repositoriesFactory.Create())
+                using (var repositoryContext = _repositoryContextFactory.Get())
                 {
-                    var cut = repositories.SubscriberRepository();
+                    var cut = repositoryContext.SubscriberRepository;
 
                     cut.Insert(new Subscriber
                     {
@@ -52,19 +52,19 @@ namespace Grumpy.RipplesMQ.Infrastructure.IntegrationTests
                         MessageType = "String"
                     });
 
-                    repositories.Save();
+                    repositoryContext.Save();
                 }
 
-                using (var repositories = _repositoriesFactory.Create())
+                using (var repositoryContext = _repositoryContextFactory.Get())
                 {
-                    var cut = repositories.SubscriberRepository();
+                    var cut = repositoryContext.SubscriberRepository;
 
                     cut.Get(ServerName, _queueName).Should().NotBeNull();
                 }
 
-                using (var repositories = _repositoriesFactory.Create())
+                using (var repositoryContext = _repositoryContextFactory.Get())
                 {
-                    var cut = repositories.SubscriberRepository();
+                    var cut = repositoryContext.SubscriberRepository;
 
                     var entity = cut.Get(ServerName, _queueName);
 
@@ -73,29 +73,29 @@ namespace Grumpy.RipplesMQ.Infrastructure.IntegrationTests
                     entity.Name = "MySubscriber";
                     entity.RegisterDateTime = DateTimeOffset.Now;
 
-                    repositories.Save();
+                    repositoryContext.Save();
                 }
 
-                using (var repositories = _repositoriesFactory.Create())
+                using (var repositoryContext = _repositoryContextFactory.Get())
                 {
-                    var cut = repositories.SubscriberRepository();
+                    var cut = repositoryContext.SubscriberRepository;
 
                     cut.Get(ServerName, _queueName).Topic.Should().Be("AnotherTopic");
                     cut.GetAll().Count().Should().BeGreaterOrEqualTo(1);
                 }
 
-                using (var repositories = _repositoriesFactory.Create())
+                using (var repositoryContext = _repositoryContextFactory.Get())
                 {
-                    var cut = repositories.SubscriberRepository();
+                    var cut = repositoryContext.SubscriberRepository;
 
                     cut.Delete(ServerName, _queueName);
 
-                    repositories.Save();
+                    repositoryContext.Save();
                 }
 
-                using (var repositories = _repositoriesFactory.Create())
+                using (var repositoryContext = _repositoryContextFactory.Get())
                 {
-                    var cut = repositories.SubscriberRepository();
+                    var cut = repositoryContext.SubscriberRepository;
 
                     cut.Get(ServerName, _queueName).Should().BeNull();
                 }

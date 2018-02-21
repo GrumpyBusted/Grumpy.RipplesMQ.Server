@@ -7,41 +7,29 @@ using Microsoft.Extensions.Logging;
 namespace Grumpy.RipplesMQ.Infrastructure.Repositories
 {
     /// <inheritdoc />
-    public class Repositories : IRepositories
+    public class RepositoryContext : IRepositoryContext
     {
         private readonly Entities _entities;
         private bool _disposed;
         private DbContextTransaction _dbContextTransaction;
 
         /// <inheritdoc />
-        public Repositories(ILogger logger, IEntityConnectionConfig entityConnectionConfig)
+        public RepositoryContext(ILogger logger, IEntityConnectionConfig entityConnectionConfig)
         {
             _entities = new Entities(logger, entityConnectionConfig);
         }
 
         /// <inheritdoc />
-        public IMessageRepository MessageRepository()
-        {
-            return new MessageRepository(_entities);
-        }
+        public IMessageRepository MessageRepository => new MessageRepository(_entities);
 
         /// <inheritdoc />
-        public IMessageBrokerServiceRepository MessageBrokerServiceRepository()
-        {
-            return new MessageBrokerServiceRepository(_entities);
-        }
+        public IMessageBrokerServiceRepository MessageBrokerServiceRepository => new MessageBrokerServiceRepository(_entities);
 
         /// <inheritdoc />
-        public IMessageStateRepository MessageStateRepository()
-        {
-            return new MessageStateRepository(_entities);
-        }
+        public IMessageStateRepository MessageStateRepository => new MessageStateRepository(_entities);
 
         /// <inheritdoc />
-        public ISubscriberRepository SubscriberRepository()
-        {
-            return new SubscriberRepository(_entities);
-        }
+        public ISubscriberRepository SubscriberRepository => new SubscriberRepository(_entities);
 
         /// <inheritdoc />
         public void Save()

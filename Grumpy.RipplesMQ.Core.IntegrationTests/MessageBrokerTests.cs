@@ -21,7 +21,7 @@ namespace Grumpy.RipplesMQ.Core.IntegrationTests
         [Fact]
         public void CanCreateInstance()
         {
-            new MessageBroker(NullLogger.Instance, new MessageBrokerConfig(), Substitute.For<IRepositoriesFactory>(), Substitute.For<IQueueHandlerFactory>(), Substitute.For<IQueueFactory>(), Substitute.For<IProcessInformation>()).Should().NotBeNull();
+            new MessageBroker(NullLogger.Instance, new MessageBrokerConfig(), Substitute.For<IRepositoryContextFactory>(), Substitute.For<IQueueHandlerFactory>(), Substitute.For<IQueueFactory>(), Substitute.For<IProcessInformation>()).Should().NotBeNull();
         }
 
         [Fact(Skip = "Add data to database")]
@@ -31,11 +31,11 @@ namespace Grumpy.RipplesMQ.Core.IntegrationTests
             var messageBrokerConfig = new MessageBrokerConfig { RemoteQueueName = "MyRemoteQueueName", ServiceName = "TestBroker" };
             var entityConnectionConfig = new EntityConnectionConfig(new DatabaseConnectionConfig("(localdb)\\MSSQLLocalDB", "ABJA_Ripples"));
             var logger = NullLogger.Instance;
-            var repositoriesFactory = new RepositoriesFactory(logger, entityConnectionConfig);
+            var repositoryContextFactory = new RepositoryContextFactory(logger, entityConnectionConfig);
             var queueHandlerFactory = new QueueHandlerFactory(logger, queueFactory);
             var processInformation = new ProcessInformation();
 
-            using (var messageBroker = new MessageBroker(logger, messageBrokerConfig, repositoriesFactory, queueHandlerFactory, queueFactory, processInformation))
+            using (var messageBroker = new MessageBroker(logger, messageBrokerConfig, repositoryContextFactory, queueHandlerFactory, queueFactory, processInformation))
             {
                 var cancellationToken = new CancellationToken();
                 messageBroker.Start(cancellationToken);

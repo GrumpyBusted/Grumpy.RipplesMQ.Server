@@ -7,25 +7,25 @@ namespace Grumpy.RipplesMQ.Infrastructure.UnitTests
 {
     public class NullRepositoriesTests
     {
-        private readonly IRepositoriesFactory _repositoriesFactory;
+        private readonly IRepositoryContextFactory _repositoryContextFactory;
 
         public NullRepositoriesTests()
         {
-            _repositoriesFactory = new NullRepositoriesFactory();
+            _repositoryContextFactory = new NullRepositoryContextFactory();
         }
 
         [Fact]
         public void CanCreateNullRepositories()
         {
-            _repositoriesFactory.Create().GetType().Should().Be<NullRepositories.NullRepositories>();
+            _repositoryContextFactory.Get().GetType().Should().Be<NullRepositoryContext>();
         }
 
         [Fact]
         public void CanSaveNullRepositories()
         {
-            using (var repositories = _repositoriesFactory.Create())
+            using (var repositoryContext = _repositoryContextFactory.Get())
             {
-                repositories.Save();
+                repositoryContext.Save();
             }
         }
     }

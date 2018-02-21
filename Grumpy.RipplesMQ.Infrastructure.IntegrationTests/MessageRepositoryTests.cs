@@ -14,14 +14,14 @@ namespace Grumpy.RipplesMQ.Infrastructure.IntegrationTests
     public class MessageRepositoryTests
     {
         private readonly EntityConnectionConfig _entityConnectionConfig;
-        private readonly IRepositoriesFactory _repositoriesFactory;
+        private readonly IRepositoryContextFactory _repositoryContextFactory;
         private readonly string _messageId;
 
         public MessageRepositoryTests()
         {
             _messageId = UniqueKeyUtility.Generate();
             _entityConnectionConfig = new EntityConnectionConfig(new DatabaseConnectionConfig(@"(localdb)\MSSQLLocalDB", "Grumpy.RipplesMQ.Database_Model"));
-            _repositoriesFactory = new RepositoriesFactory(NullLogger.Instance, _entityConnectionConfig);
+            _repositoryContextFactory = new RepositoryContextFactory(NullLogger.Instance, _entityConnectionConfig);
         }
 
         [Fact]
@@ -29,16 +29,16 @@ namespace Grumpy.RipplesMQ.Infrastructure.IntegrationTests
         {
             try
             {
-                using (var repositories = _repositoriesFactory.Create())
+                using (var repositoryContext = _repositoryContextFactory.Get())
                 {
-                    var cut = repositories.MessageRepository();
+                    var cut = repositoryContext.MessageRepository;
 
                     cut.GetAll().Where(e => e.Id == _messageId).Should().BeEmpty();
                 }
 
-                using (var repositories = _repositoriesFactory.Create())
+                using (var repositoryContext = _repositoryContextFactory.Get())
                 {
-                    var cut = repositories.MessageRepository();
+                    var cut = repositoryContext.MessageRepository;
 
                     cut.Insert(new Message
                     {
@@ -49,23 +49,23 @@ namespace Grumpy.RipplesMQ.Infrastructure.IntegrationTests
                         PublishDateTime = DateTimeOffset.Now
                     });
 
-                    repositories.Save();
+                    repositoryContext.Save();
                 }
 
-                using (var repositories = _repositoriesFactory.Create())
+                using (var repositoryContext = _repositoryContextFactory.Get())
                 {
-                    var cut = repositories.MessageRepository();
+                    var cut = repositoryContext.MessageRepository;
 
                     cut.GetAll().Where(e => e.Id == _messageId).Should().NotBeEmpty();
                 }
 
-                using (var repositories = _repositoriesFactory.Create())
+                using (var repositoryContext = _repositoryContextFactory.Get())
                 {
-                    var cut = repositories.MessageRepository();
+                    var cut = repositoryContext.MessageRepository;
 
                     cut.Delete(_messageId);
 
-                    repositories.Save();
+                    repositoryContext.Save();
                 }
             }
             finally

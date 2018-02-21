@@ -3,7 +3,7 @@
 namespace Grumpy.RipplesMQ.Infrastructure.NullRepositories
 {
     /// <inheritdoc />
-    public class NullRepositories : IRepositories
+    public class NullRepositoryContext : IRepositoryContext
     {
         private readonly IMessageRepository _messageRepository;
         private readonly IMessageBrokerServiceRepository _messageBrokerServiceRepository;
@@ -11,7 +11,7 @@ namespace Grumpy.RipplesMQ.Infrastructure.NullRepositories
         private readonly ISubscriberRepository _subscriberRepository;
 
         /// <inheritdoc />
-        public NullRepositories()
+        public NullRepositoryContext()
         {
             _messageRepository = new NullMessageRepository();
             _messageBrokerServiceRepository = new NullMessageBrokerServiceRepository();
@@ -25,28 +25,16 @@ namespace Grumpy.RipplesMQ.Infrastructure.NullRepositories
         }
 
         /// <inheritdoc />
-        public IMessageRepository MessageRepository()
-        {
-            return _messageRepository;
-        }
+        public IMessageRepository MessageRepository => _messageRepository;
 
         /// <inheritdoc />
-        public IMessageBrokerServiceRepository MessageBrokerServiceRepository()
-        {
-            return _messageBrokerServiceRepository;
-        }
+        public IMessageBrokerServiceRepository MessageBrokerServiceRepository => _messageBrokerServiceRepository;
 
         /// <inheritdoc />
-        public IMessageStateRepository MessageStateRepository()
-        {
-            return _messageStateRepository;
-        }
+        public IMessageStateRepository MessageStateRepository => _messageStateRepository;
 
         /// <inheritdoc />
-        public ISubscriberRepository SubscriberRepository()
-        {
-            return _subscriberRepository;
-        }
+        public ISubscriberRepository SubscriberRepository => _subscriberRepository;
 
         /// <inheritdoc />
         public void Save()

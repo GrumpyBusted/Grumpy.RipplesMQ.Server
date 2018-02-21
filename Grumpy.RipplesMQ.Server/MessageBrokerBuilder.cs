@@ -22,7 +22,7 @@ namespace Grumpy.RipplesMQ.Server
         private readonly IProcessInformation _processInformation;
         private string _serviceName;
         private string _remoteQueueName;
-        private IRepositoriesFactory _repositoriesFactory;
+        private IRepositoryContextFactory _repositoryContextFactory;
         private ILogger _logger;
 
         /// <inheritdoc />
@@ -32,7 +32,7 @@ namespace Grumpy.RipplesMQ.Server
             _processInformation = new ProcessInformation();
             _serviceName = _processInformation.ProcessName;
             _remoteQueueName = _serviceName.Replace("$", ".") + ".Remote";
-            _repositoriesFactory = new NullRepositoriesFactory();
+            _repositoryContextFactory = new NullRepositoryContextFactory();
         }
 
         /// <summary>
@@ -80,7 +80,7 @@ namespace Grumpy.RipplesMQ.Server
         public MessageBrokerBuilder WithRepository(string databaseServer, string databaseName = "RipplesMQ")
         {
             if (!databaseServer.NullOrEmpty())
-                _repositoriesFactory = new RepositoriesFactory(_logger, new EntityConnectionConfig(new DatabaseConnectionConfig(databaseServer, databaseName)));
+                _repositoryContextFactory = new RepositoryContextFactory(_logger, new EntityConnectionConfig(new DatabaseConnectionConfig(databaseServer, databaseName)));
 
             return this;
         }
@@ -100,7 +100,7 @@ namespace Grumpy.RipplesMQ.Server
             var queueFactory = new QueueFactory(_logger);
             var queueHandlerFactory = new QueueHandlerFactory(_logger, queueFactory);
 
-            return new MessageBroker(_logger, messageBrokerConfig, _repositoriesFactory, queueHandlerFactory, queueFactory, _processInformation);
+            return new MessageBroker(_logger, messageBrokerConfig, _repositoryContextFactory, queueHandlerFactory, queueFactory, _processInformation);
         }
 
         /// <summary>

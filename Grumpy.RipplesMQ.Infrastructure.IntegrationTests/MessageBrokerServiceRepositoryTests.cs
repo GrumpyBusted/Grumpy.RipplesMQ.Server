@@ -15,14 +15,14 @@ namespace Grumpy.RipplesMQ.Infrastructure.IntegrationTests
     {
         private readonly EntityConnectionConfig _entityConnectionConfig;
         private const string ServerName = "MyServer";
-        private readonly IRepositoriesFactory _repositoriesFactory;
+        private readonly IRepositoryContextFactory _repositoryContextFactory;
         private readonly string _serviceName;
 
         public MessageBrokerServiceRepositoryTests()
         {
             _serviceName = UniqueKeyUtility.Generate();
             _entityConnectionConfig = new EntityConnectionConfig(new DatabaseConnectionConfig(@"(localdb)\MSSQLLocalDB", "Grumpy.RipplesMQ.Database_Model"));
-            _repositoriesFactory = new RepositoriesFactory(NullLogger.Instance, _entityConnectionConfig);
+            _repositoryContextFactory = new RepositoryContextFactory(NullLogger.Instance, _entityConnectionConfig);
         }
 
         [Fact]
@@ -30,16 +30,16 @@ namespace Grumpy.RipplesMQ.Infrastructure.IntegrationTests
         {
             try
             {
-                using (var repositories = _repositoriesFactory.Create())
+                using (var repositoryContext = _repositoryContextFactory.Get())
                 {
-                    var cut = repositories.MessageBrokerServiceRepository();
+                    var cut = repositoryContext.MessageBrokerServiceRepository;
 
                     cut.Get(ServerName, _serviceName).Should().BeNull();
                 }
 
-                using (var repositories = _repositoriesFactory.Create())
+                using (var repositoryContext = _repositoryContextFactory.Get())
                 {
-                    var cut = repositories.MessageBrokerServiceRepository();
+                    var cut = repositoryContext.MessageBrokerServiceRepository;
 
                     cut.Insert(new MessageBrokerService
                     {
@@ -51,12 +51,12 @@ namespace Grumpy.RipplesMQ.Infrastructure.IntegrationTests
                         PulseDateTime = DateTimeOffset.Now
                     });
 
-                    repositories.Save();
+                    repositoryContext.Save();
                 }
 
-                using (var repositories = _repositoriesFactory.Create())
+                using (var repositoryContext = _repositoryContextFactory.Get())
                 {
-                    var cut = repositories.MessageBrokerServiceRepository();
+                    var cut = repositoryContext.MessageBrokerServiceRepository;
 
                     var entity = cut.Get(ServerName, _serviceName);
 
@@ -65,9 +65,9 @@ namespace Grumpy.RipplesMQ.Infrastructure.IntegrationTests
                     entity.LocaleQueueName.Should().Be("MyLocaleQueueName");
                 }
 
-                using (var repositories = _repositoriesFactory.Create())
+                using (var repositoryContext = _repositoryContextFactory.Get())
                 {
-                    var cut = repositories.MessageBrokerServiceRepository();
+                    var cut = repositoryContext.MessageBrokerServiceRepository;
 
                     var entity = cut.Get(ServerName, _serviceName);
 
@@ -76,12 +76,12 @@ namespace Grumpy.RipplesMQ.Infrastructure.IntegrationTests
                     entity.StartDateTime = DateTimeOffset.Now;
                     entity.PulseDateTime = DateTimeOffset.Now;
 
-                    repositories.Save();
+                    repositoryContext.Save();
                 }
 
-                using (var repositories = _repositoriesFactory.Create())
+                using (var repositoryContext = _repositoryContextFactory.Get())
                 {
-                    var cut = repositories.MessageBrokerServiceRepository();
+                    var cut = repositoryContext.MessageBrokerServiceRepository;
 
                     var entity = cut.Get(ServerName, _serviceName);
 
@@ -90,18 +90,18 @@ namespace Grumpy.RipplesMQ.Infrastructure.IntegrationTests
                     cut.GetAll().Count().Should().BeGreaterOrEqualTo(1);
                 }
 
-                using (var repositories = _repositoriesFactory.Create())
+                using (var repositoryContext = _repositoryContextFactory.Get())
                 {
-                    var cut = repositories.MessageBrokerServiceRepository();
+                    var cut = repositoryContext.MessageBrokerServiceRepository;
 
                     cut.Delete(ServerName, _serviceName);
 
-                    repositories.Save();
+                    repositoryContext.Save();
                 }
 
-                using (var repositories = _repositoriesFactory.Create())
+                using (var repositoryContext = _repositoryContextFactory.Get())
                 {
-                    var cut = repositories.MessageBrokerServiceRepository();
+                    var cut = repositoryContext.MessageBrokerServiceRepository;
 
                     cut.Get(ServerName, _serviceName).Should().BeNull();
                 }

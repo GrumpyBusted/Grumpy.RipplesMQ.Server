@@ -24,12 +24,12 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
     public class MessageBrokerTests
     {
         private readonly MessageBrokerConfig _messageBrokerConfig;
-        private readonly IRepositoriesFactory _repositoriesFactory;
+        private readonly IRepositoryContextFactory _repositoryContextFactory;
         private readonly IQueueHandlerFactory _queueHandlerFactory;
         private readonly IQueueFactory _queueFactory;
         private readonly IProcessInformation _processInformation;
         private readonly CancellationToken _cancellationToken;
-        private readonly IRepositories _repositories;
+        private readonly IRepositoryContext _repositoryContext;
         private readonly IMessageBrokerServiceRepository _messageBrokerServiceRepository;
         private readonly ISubscriberRepository _subscriberRepository;
         private readonly IMessageRepository _messageRepository;
@@ -52,13 +52,13 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
             _subscriberRepository = Substitute.For<ISubscriberRepository>();
             _messageRepository = Substitute.For<IMessageRepository>();
             _messageStateRepository = Substitute.For<IMessageStateRepository>();
-            _repositories = Substitute.For<IRepositories>();
-            _repositories.MessageBrokerServiceRepository().Returns(_messageBrokerServiceRepository);
-            _repositories.SubscriberRepository().Returns(_subscriberRepository);
-            _repositories.MessageRepository().Returns(_messageRepository);
-            _repositories.MessageStateRepository().Returns(_messageStateRepository);
-            _repositoriesFactory = Substitute.For<IRepositoriesFactory>();
-            _repositoriesFactory.Create().Returns(_repositories);
+            _repositoryContext = Substitute.For<IRepositoryContext>();
+            _repositoryContext.MessageBrokerServiceRepository.Returns(_messageBrokerServiceRepository);
+            _repositoryContext.SubscriberRepository.Returns(_subscriberRepository);
+            _repositoryContext.MessageRepository.Returns(_messageRepository);
+            _repositoryContext.MessageStateRepository.Returns(_messageStateRepository);
+            _repositoryContextFactory = Substitute.For<IRepositoryContextFactory>();
+            _repositoryContextFactory.Get().Returns(_repositoryContext);
             _queueFactory = Substitute.For<IQueueFactory>();
             _messageBrokerQueue = Substitute.For<ILocaleQueue>();
             _queueFactory.CreateLocale(Shared.Config.MessageBrokerConfig.LocaleQueueName, Arg.Any<bool>(), Arg.Any<LocaleQueueMode>(), Arg.Any<bool>(), Arg.Any<AccessMode>()).Returns(_messageBrokerQueue);
@@ -84,7 +84,7 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
             }
 
             _messageBrokerServiceRepository.Received(1).Insert(Arg.Any<MessageBrokerService>());
-            _repositories.Received(1).Save();
+            _repositoryContext.Received(1).Save();
         }
 
         [Fact]
@@ -258,7 +258,7 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
                 messageBrokerService.PulseDateTime.Should().BeAfter(DateTimeOffset.Now.AddHours(-1));
             }
 
-            _repositories.Received(1).Save();
+            _repositoryContext.Received(1).Save();
         }
 
         [Fact]
@@ -356,7 +356,7 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
             HandleMessage(new RepositoryCleanupMessage());
 
             _messageStateRepository.Received(1).DeleteBySubscriber("SubscriberA");
-            _repositories.Received(2).Save();
+            _repositoryContext.Received(2).Save();
         }
 
         [Fact]
@@ -376,7 +376,7 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
 
             HandleMessage(new RepositoryCleanupMessage());
 
-            _repositories.Received(1).Save();
+            _repositoryContext.Received(1).Save();
         }
 
         [Fact]
@@ -399,7 +399,7 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
 
             _messageRepository.Received(1).Delete("MessageId1");
             _messageRepository.Received(1).Delete(Arg.Any<string>());
-            _repositories.Received(2).Save();
+            _repositoryContext.Received(2).Save();
         }
 
         [Fact]
@@ -419,7 +419,7 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
             HandleMessage(new RepositoryCleanupMessage());
 
             _messageRepository.Received(0).Delete("MessageId1");
-            _repositories.Received(1).Save();
+            _repositoryContext.Received(1).Save();
         }
 
         [Fact]
@@ -438,7 +438,7 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
             HandleMessage(new RepositoryCleanupMessage());
 
             _messageRepository.Received(1).Delete("MessageId1");
-            _repositories.Received(3).Save();
+            _repositoryContext.Received(3).Save();
         }
 
         [Fact]
@@ -455,7 +455,7 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
 
             HandleMessage(new RepositoryCleanupMessage());
 
-            _repositories.Received(2).Save();
+            _repositoryContext.Received(2).Save();
         }
 
         [Fact]
@@ -471,7 +471,7 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
 
             _messageBrokerServiceRepository.Received(1).Delete("MyTestServer", "SomeService");
             _messageBrokerServiceRepository.Received(1).Delete(Arg.Any<string>(), Arg.Any<string>());
-            _repositories.Received(1).Save();
+            _repositoryContext.Received(1).Save();
         }
 
         [Fact]
@@ -504,7 +504,7 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
 
             _subscriberRepository.Received(1).Delete("MyTestServer", "OldQueueName");
             _subscriberRepository.Received(1).Delete(Arg.Any<string>(), Arg.Any<string>());
-            _repositories.Received(1).Save();
+            _repositoryContext.Received(1).Save();
         }
 
         [Fact]
@@ -543,7 +543,7 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
 
             _messageStateRepository.Received(1).DeleteByMessageId("MessageId1");
             _messageStateRepository.Received(0).DeleteByMessageId("MessageId2");
-            _repositories.Received(2).Save();
+            _repositoryContext.Received(2).Save();
         }
 
         [Fact]
@@ -614,7 +614,7 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
             });
 
             _subscriberRepository.Received(1).Insert(Arg.Any<Subscriber>());
-            _repositories.Received(1).Save();
+            _repositoryContext.Received(1).Save();
         }
 
 
@@ -637,7 +637,7 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
             });
 
             _subscriberRepository.Received(0).Insert(Arg.Any<Subscriber>());
-            _repositories.Received(1).Save();
+            _repositoryContext.Received(1).Save();
         }
 
         [Fact]
@@ -659,7 +659,7 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
             });
 
             _subscriberRepository.Received(0).Insert(Arg.Any<Subscriber>());
-            _repositories.Received(0).Save();
+            _repositoryContext.Received(0).Save();
         }
 
         [Fact]
@@ -718,7 +718,7 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
             }
 
             subscriber.PulseDateTime.Should().BeAfter(DateTimeOffset.Now.AddHours(-1));
-            _repositories.Received(1).Save();
+            _repositoryContext.Received(1).Save();
         }
 
         [Fact]
@@ -882,7 +882,7 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
             HandleMessage(CreatePublishMessage("MyReplyQueue", "MyTopic", "Message"));
 
             _messageRepository.Received(1).Insert(Arg.Any<Message>());
-            _repositories.Received(1).Save();
+            _repositoryContext.Received(1).Save();
         }
 
         private static PublishMessage CreatePublishMessage<T>(string replyQueue, string topic, T message, bool persistent = true)
@@ -903,7 +903,7 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
             HandleMessage(CreatePublishMessage("MyReplyQueue", "MyTopic", "Message", false));
 
             _messageRepository.Received(0).Insert(Arg.Any<Message>());
-            _repositories.Received(0).Save();
+            _repositoryContext.Received(0).Save();
         }
 
         [Fact]
@@ -922,7 +922,7 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
             _messageStateRepository.Received(2).Insert(Arg.Is<MessageState>(m => m.SubscriberName == "SubscriberA"));
             _messageStateRepository.Received(2).Insert(Arg.Is<MessageState>(m => m.SubscriberName == "SubscriberC"));
             _messageStateRepository.Received(4).Insert(Arg.Any<MessageState>());
-            _repositories.Received(2).Save();
+            _repositoryContext.Received(2).Save();
         }
 
         [Fact]
@@ -956,7 +956,7 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
             }
 
             _messageStateRepository.Received(1).Insert(Arg.Is<MessageState>(m => m.State == "Distributed"));
-            _repositories.Received(2).Save(); // One for saving the message and one for saving the send timestamp
+            _repositoryContext.Received(2).Save(); // One for saving the message and one for saving the send timestamp
         }
 
         [Fact]
@@ -1056,7 +1056,7 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
             HandleMessage(new SubscribeHandlerCompleteMessage { Name = "SubscriberA", Persistent = true, MessageId = "MessageId1" });
 
             _messageStateRepository.Received(1).Insert(Arg.Is<MessageState>(m => m.State == "Completed" && m.SubscriberName == "SubscriberA"));
-            _repositories.Received(1).Save();
+            _repositoryContext.Received(1).Save();
         }
 
         [Fact]
@@ -1065,7 +1065,7 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
             HandleMessage(new SubscribeHandlerCompleteMessage { Name = "SubscriberA", Persistent = false, MessageId = "MessageId1" });
 
             _messageStateRepository.Received(0).Get(Arg.Any<string>(), Arg.Any<string>());
-            _repositories.Received(0).Save();
+            _repositoryContext.Received(0).Save();
         }
 
         [Fact]
@@ -1079,7 +1079,7 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
             }
 
             _messageStateRepository.Received(2).Insert(Arg.Is<MessageState>(m => m.ErrorCount == 1 && m.SubscriberName == "SubscriberA"));
-            _repositories.Received(2).Save();
+            _repositoryContext.Received(2).Save();
         }
 
         [Fact]
@@ -1093,7 +1093,7 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
             }
 
             _messageStateRepository.Received(1).Insert(Arg.Is<MessageState>(m => m.ErrorCount == 3 && m.SubscriberName == "SubscriberA"));
-            _repositories.Received(1).Save();
+            _repositoryContext.Received(1).Save();
         }
 
         [Fact]
@@ -1107,7 +1107,7 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
             }
 
             _messageStateRepository.Received(0).Get(Arg.Any<string>(), Arg.Any<string>());
-            _repositories.Received(0).Save();
+            _repositoryContext.Received(0).Save();
         }
 
         [Fact]
@@ -1365,7 +1365,7 @@ namespace Grumpy.RipplesMQ.Core.UnitTests
 
         private IMessageBroker CreateMessageBroker()
         {
-            return new MessageBroker(NullLogger.Instance, _messageBrokerConfig, _repositoriesFactory, _queueHandlerFactory, _queueFactory, _processInformation);
+            return new MessageBroker(NullLogger.Instance, _messageBrokerConfig, _repositoryContextFactory, _queueHandlerFactory, _queueFactory, _processInformation);
         }
     }
 }

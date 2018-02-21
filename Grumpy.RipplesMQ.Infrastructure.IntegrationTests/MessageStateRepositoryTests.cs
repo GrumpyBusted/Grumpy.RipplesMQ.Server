@@ -15,7 +15,7 @@ namespace Grumpy.RipplesMQ.Infrastructure.IntegrationTests
     {
         private readonly EntityConnectionConfig _entityConnectionConfig;
         private readonly string _subscriberName;
-        private readonly IRepositoriesFactory _repositoriesFactory;
+        private readonly IRepositoryContextFactory _repositoryContextFactory;
         private readonly string _messageId;
 
         public MessageStateRepositoryTests()
@@ -23,7 +23,7 @@ namespace Grumpy.RipplesMQ.Infrastructure.IntegrationTests
             _messageId = UniqueKeyUtility.Generate();
             _subscriberName = UniqueKeyUtility.Generate();
             _entityConnectionConfig = new EntityConnectionConfig(new DatabaseConnectionConfig(@"(localdb)\MSSQLLocalDB", "Grumpy.RipplesMQ.Database_Model"));
-            _repositoriesFactory = new RepositoriesFactory(NullLogger.Instance, _entityConnectionConfig);
+            _repositoryContextFactory = new RepositoryContextFactory(NullLogger.Instance, _entityConnectionConfig);
         }
 
         [Fact]
@@ -31,16 +31,16 @@ namespace Grumpy.RipplesMQ.Infrastructure.IntegrationTests
         {
             try
             {
-                using (var repositories = _repositoriesFactory.Create())
+                using (var repositoryContext = _repositoryContextFactory.Get())
                 {
-                    var cut = repositories.MessageStateRepository();
+                    var cut = repositoryContext.MessageStateRepository;
 
                     cut.Get(_messageId, _subscriberName).Should().BeNull();
                 }
 
-                using (var repositories = _repositoriesFactory.Create())
+                using (var repositoryContext = _repositoryContextFactory.Get())
                 {
-                    var cut = repositories.MessageStateRepository();
+                    var cut = repositoryContext.MessageStateRepository;
 
                     cut.Insert(new MessageState
                     {
@@ -51,37 +51,37 @@ namespace Grumpy.RipplesMQ.Infrastructure.IntegrationTests
                         UpdateDateTime = DateTimeOffset.Now
                     });
 
-                    repositories.Save();
+                    repositoryContext.Save();
                 }
 
-                using (var repositories = _repositoriesFactory.Create())
+                using (var repositoryContext = _repositoryContextFactory.Get())
                 {
-                    var cut = repositories.MessageStateRepository();
+                    var cut = repositoryContext.MessageStateRepository;
 
                     cut.Get(_messageId, _subscriberName).Should().NotBeNull();
                     cut.GetAll().Where(e => e.MessageId == _messageId).Should().NotBeNull();
                     cut.GetAll().Count().Should().BeGreaterOrEqualTo(1);
                 }
 
-                using (var repositories = _repositoriesFactory.Create())
+                using (var repositoryContext = _repositoryContextFactory.Get())
                 {
-                    var cut = repositories.MessageStateRepository();
+                    var cut = repositoryContext.MessageStateRepository;
 
                     cut.DeleteByMessageId(_messageId);
 
-                    repositories.Save();
+                    repositoryContext.Save();
                 }
 
-                using (var repositories = _repositoriesFactory.Create())
+                using (var repositoryContext = _repositoryContextFactory.Get())
                 {
-                    var cut = repositories.MessageStateRepository();
+                    var cut = repositoryContext.MessageStateRepository;
 
                     cut.Get(_messageId, _subscriberName).Should().BeNull();
                 }
 
-                using (var repositories = _repositoriesFactory.Create())
+                using (var repositoryContext = _repositoryContextFactory.Get())
                 {
-                    var cut = repositories.MessageStateRepository();
+                    var cut = repositoryContext.MessageStateRepository;
 
                     cut.Insert(new MessageState
                     {
@@ -92,21 +92,21 @@ namespace Grumpy.RipplesMQ.Infrastructure.IntegrationTests
                         UpdateDateTime = DateTimeOffset.Now
                     });
 
-                    repositories.Save();
+                    repositoryContext.Save();
                 }
 
-                using (var repositories = _repositoriesFactory.Create())
+                using (var repositoryContext = _repositoryContextFactory.Get())
                 {
-                    var cut = repositories.MessageStateRepository();
+                    var cut = repositoryContext.MessageStateRepository;
 
                     cut.DeleteBySubscriber(_subscriberName);
 
-                    repositories.Save();
+                    repositoryContext.Save();
                 }
 
-                using (var repositories = _repositoriesFactory.Create())
+                using (var repositoryContext = _repositoryContextFactory.Get())
                 {
-                    var cut = repositories.MessageStateRepository();
+                    var cut = repositoryContext.MessageStateRepository;
 
                     cut.Get(_messageId, _subscriberName).Should().BeNull();
                 }

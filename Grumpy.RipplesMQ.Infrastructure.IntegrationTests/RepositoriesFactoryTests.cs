@@ -10,28 +10,28 @@ namespace Grumpy.RipplesMQ.Infrastructure.IntegrationTests
 {
     public class RepositoriesFactoryTests
     {
-        private readonly IRepositoriesFactory _repositoriesFactory;
+        private readonly IRepositoryContextFactory _repositoryContextFactory;
 
         public RepositoriesFactoryTests()
         {
             var config = Substitute.For<IEntityConnectionConfig>();
             config.ConnectionString(Arg.Any<string>(), Arg.Any<string>()).Returns("metadata=res://*/Model.csdl|res://*/Model.ssdl|res://*/Model.msl;provider=System.Data.SqlClient;provider connection string=\"data source=(localdb)\\MSSQLLocalDB;initial catalog=Grumpy.RipplesMQ.Database_Model;integrated security=True;MultipleActiveResultSets=True;App=EntityFramework\"\" providerName=\"System.Data.EntityClient");
 
-            _repositoriesFactory = new RepositoriesFactory(NullLogger.Instance, config);
+            _repositoryContextFactory = new RepositoryContextFactory(NullLogger.Instance, config);
         }
 
         [Fact]
         public void CanCreateRepositories()
         {
-            _repositoriesFactory.Create().GetType().Should().Be<Repositories.Repositories>();
+            _repositoryContextFactory.Get().GetType().Should().Be<RepositoryContext>();
         }
 
         [Fact]
         public void CanSaveRepositories()
         {
-            using (var repositories = _repositoriesFactory.Create())
+            using (var repositoryContext = _repositoryContextFactory.Get())
             {
-                repositories.Save();
+                repositoryContext.Save();
             }
         }
     }

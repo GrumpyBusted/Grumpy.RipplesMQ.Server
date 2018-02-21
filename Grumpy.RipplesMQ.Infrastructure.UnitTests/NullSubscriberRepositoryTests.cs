@@ -10,18 +10,18 @@ namespace Grumpy.RipplesMQ.Infrastructure.UnitTests
 {
     public class NullSubscriberRepositoryTests : IDisposable
     {
-        private readonly IRepositories _repositories;
+        private readonly IRepositoryContext _repositoryContext;
         private readonly ISubscriberRepository _cut;
 
         public NullSubscriberRepositoryTests()
         {
-            _repositories = new NullRepositoriesFactory().Create();
-            _cut = _repositories.SubscriberRepository();
+            _repositoryContext = new NullRepositoryContextFactory().Get();
+            _cut = _repositoryContext.SubscriberRepository;
         }
 
         public void Dispose()
         {
-            _repositories.Dispose();
+            _repositoryContext.Dispose();
         }
 
         [Fact]
